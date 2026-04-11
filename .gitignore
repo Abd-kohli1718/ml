@@ -5,9 +5,4 @@ __pycache__/
 venv/
 ENV/
 env/
-models/
-data/raw/
-data/processed/
-recordings/
 .DS_Store
-*.pkl
