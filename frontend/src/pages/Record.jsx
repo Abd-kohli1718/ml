@@ -18,6 +18,7 @@ function Record() {
   const audioChunksRef = useRef([])
   const streamRef = useRef(null)
   const analyserRef = useRef(null)
+  const isRecordingRef = useRef(false)
 
   // Format time as M:SS
   const formatTime = (secs) => {
@@ -39,8 +40,26 @@ function Record() {
     hour12: true,
   })
 
+  // Stop recording
+  const stopRecording = useCallback(() => {
+    if (!isRecordingRef.current) return
+    isRecordingRef.current = false
+    setIsRecording(false)
+    clearInterval(intervalRef.current)
+    clearInterval(waveIntervalRef.current)
+    setWaveData(Array(40).fill(0.3))
+
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      mediaRecorderRef.current.stop()
+    }
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop())
+    }
+  }, [])
+
   // Start recording — real mic capture
   const startRecording = useCallback(async () => {
+    if (isRecordingRef.current) return
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
       streamRef.current = stream
@@ -68,6 +87,7 @@ function Record() {
       mediaRecorderRef.current = mediaRecorder
       mediaRecorder.start(100) // collect data every 100ms
 
+      isRecordingRef.current = true
       setIsRecording(true)
       setTimer(0)
       setResult(null)
@@ -82,7 +102,6 @@ function Record() {
         if (analyserRef.current) {
           const dataArray = new Uint8Array(analyserRef.current.frequencyBinCount)
           analyserRef.current.getByteFrequencyData(dataArray)
-          // Map frequency data to waveform bars
           const bars = Array(40).fill(0).map((_, i) => {
             const idx = Math.floor((i / 40) * dataArray.length)
             return Math.max(0.05, dataArray[idx] / 255)
@@ -97,20 +116,14 @@ function Record() {
     }
   }, [])
 
-  // Stop recording
-  const stopRecording = useCallback(() => {
-    setIsRecording(false)
-    clearInterval(intervalRef.current)
-    clearInterval(waveIntervalRef.current)
-    setWaveData(Array(40).fill(0.3))
-
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-      mediaRecorderRef.current.stop()
+  // Toggle recording
+  const toggleRecording = useCallback(() => {
+    if (isRecordingRef.current) {
+      stopRecording()
+    } else {
+      startRecording()
     }
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop())
-    }
-  }, [])
+  }, [startRecording, stopRecording])
 
   // Auto-start recording on mount
   useEffect(() => {
@@ -229,7 +242,7 @@ function Record() {
         <div className={`record-mic-wrapper ${isRecording ? 'active' : ''}`}>
           <button
             className="record-mic-btn"
-            onClick={isRecording ? stopRecording : startRecording}
+            onClick={toggleRecording}
             id="record-mic-btn"
             aria-label={isRecording ? 'Stop recording' : 'Start recording'}
             disabled={isUploading}
