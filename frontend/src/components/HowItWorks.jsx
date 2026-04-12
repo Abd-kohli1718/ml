@@ -1,4 +1,5 @@
 import { useTransition } from './PageTransition'
+import { useAuth } from '../context/AuthContext'
 import './HowItWorks.css'
 
 const steps = [
@@ -50,6 +51,7 @@ const steps = [
 
 function HowItWorks() {
   const { navigateWithTransition } = useTransition()
+  const { signOut } = useAuth()
 
   return (
     <div className="how-it-works">
@@ -68,8 +70,9 @@ function HowItWorks() {
         ))}
       </div>
 
+
       {/* Logout button */}
-      <button className="logout-btn" onClick={() => navigateWithTransition('/login')} id="logout-btn">
+      <button className="logout-btn" onClick={() => signOut()} id="logout-btn">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
           <polyline points="16 17 21 12 16 7"/>

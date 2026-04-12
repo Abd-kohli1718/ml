@@ -57,10 +57,23 @@ const navItems = [
   },
 ]
 
+import { useAuth } from '../context/AuthContext'
+
 function MobileNav() {
   const { navigateWithTransition } = useTransition()
   const location = useLocation()
   const currentPath = location.pathname
+  const { signOut } = useAuth()
+
+  const handleLogout = async () => {
+    if (window.confirm('Are you sure you want to log out?')) {
+      try {
+        await signOut()
+      } catch (e) {
+        console.error(e)
+      }
+    }
+  }
 
   return (
     <nav className="mobile-nav" aria-label="Mobile navigation">
@@ -76,6 +89,21 @@ function MobileNav() {
           <span>{item.label}</span>
         </button>
       ))}
+      
+      {/* Logout Button */}
+      <button
+        className="mobile-nav-item"
+        onClick={handleLogout}
+        aria-label="Log out"
+        id="mobile-nav-logout"
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+          <polyline points="16 17 21 12 16 7"/>
+          <line x1="21" y1="12" x2="9" y2="12"/>
+        </svg>
+        <span>Logout</span>
+      </button>
     </nav>
   )
 }
