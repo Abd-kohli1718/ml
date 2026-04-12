@@ -6,6 +6,10 @@ No network call to Supabase on every request — fast sub-millisecond verificati
 """
 
 import os
+import base64
+import json
+import hmac
+import hashlib
 from dotenv import load_dotenv
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
@@ -13,54 +17,21 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 load_dotenv()
 
 JWT_SECRET = os.getenv("SUPABASE_JWT_SECRET", "")
-JWT_ALGORITHM = "HS256"
-JWT_AUDIENCE = "authenticated"
 
 # FastAPI security scheme — extracts Bearer token from Authorization header
 security = HTTPBearer(auto_error=False)
 
 
-# Try python-jose first (installed by supabase), fall back to PyJWT
-try:
-    from jose import jwt as jose_jwt
-    from jose.exceptions import ExpiredSignatureError as JoseExpiredError
-    from jose.exceptions import JWTError as JoseJWTError
-
-    def _decode_token(token: str) -> dict:
-        return jose_jwt.decode(
-            token,
-            JWT_SECRET,
-            algorithms=[JWT_ALGORITHM],
-            options={"verify_aud": False},
-        )
-
-    _ExpiredError = JoseExpiredError
-    _InvalidError = JoseJWTError
-
-except ImportError:
-    import jwt as pyjwt
-
-    def _decode_token(token: str) -> dict:
-        return pyjwt.decode(
-            token,
-            JWT_SECRET,
-            algorithms=[JWT_ALGORITHM],
-            options={"verify_aud": False},
-        )
-
-    _ExpiredError = pyjwt.ExpiredSignatureError
-    _InvalidError = pyjwt.InvalidTokenError
+def _b64_decode(s: str) -> bytes:
+    """Base64url decode with padding."""
+    s += "=" * (4 - len(s) % 4)
+    return base64.urlsafe_b64decode(s)
 
 
 def verify_token(token: str) -> dict:
     """
-    Decode and verify a Supabase JWT.
-
-    Returns the token payload containing:
-        sub   — user UUID (auth.users.id)
-        email — user email
-        role  — "authenticated"
-        exp   — expiration timestamp
+    Decode and verify a Supabase JWT manually.
+    This avoids all library conflicts between python-jose and PyJWT.
     """
     if not JWT_SECRET:
         raise HTTPException(
@@ -69,13 +40,44 @@ def verify_token(token: str) -> dict:
         )
 
     try:
-        payload = _decode_token(token)
+        parts = token.split(".")
+        if len(parts) != 3:
+            raise ValueError("Token must have 3 parts")
+
+        header_b64, payload_b64, signature_b64 = parts
+
+        # Decode header to verify HS256
+        header = json.loads(_b64_decode(header_b64))
+        if header.get("alg") != "HS256":
+            raise ValueError(f"Unsupported algorithm: {header.get('alg')}")
+
+        # Verify signature
+        message = f"{header_b64}.{payload_b64}".encode("utf-8")
+        secret_bytes = JWT_SECRET.encode("utf-8")
+        expected_sig = base64.urlsafe_b64encode(
+            hmac.new(secret_bytes, message, hashlib.sha256).digest()
+        ).rstrip(b"=")
+        actual_sig = signature_b64.encode("utf-8")
+
+        if not hmac.compare_digest(expected_sig, actual_sig):
+            raise ValueError("Invalid signature")
+
+        # Decode payload
+        payload = json.loads(_b64_decode(payload_b64))
+
+        # Check expiration
+        import time
+        exp = payload.get("exp")
+        if exp and time.time() > exp:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Token has expired",
+            )
+
         return payload
-    except _ExpiredError:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Token has expired",
-        )
+
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -88,14 +90,6 @@ def get_current_user(
 ) -> dict:
     """
     FastAPI dependency — extracts and verifies the Bearer token.
-
-    Usage:
-        @router.get("/protected")
-        async def protected_route(user: dict = Depends(get_current_user)):
-            user_id = user["sub"]
-
-    Returns the full JWT payload dict.
-    Raises 401 if token is missing or invalid.
     """
     if credentials is None:
         raise HTTPException(

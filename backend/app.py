@@ -100,31 +100,28 @@ async def health_check():
 @app.get("/api/debug/jwt", tags=["System"])
 async def debug_jwt(token: str = None):
     """Temporary debug endpoint — check JWT library and config."""
+    import jwt
     info = {
-        "deploy_version": "v3-aud-disabled",
+        "deploy_version": "v4-pyjwt-only",
         "jwt_secret_set": bool(os.getenv("SUPABASE_JWT_SECRET")),
         "jwt_secret_length": len(os.getenv("SUPABASE_JWT_SECRET", "")),
+        "pyjwt_version": jwt.__version__,
     }
-    try:
-        from jose import jwt as jose_jwt
-        info["library"] = "python-jose"
 
-        # If a token was passed, try decoding it
-        if token:
-            try:
-                payload = jose_jwt.decode(
-                    token,
-                    os.getenv("SUPABASE_JWT_SECRET", ""),
-                    algorithms=["HS256"],
-                    options={"verify_aud": False},
-                )
-                info["decode_status"] = "success"
-                info["sub"] = payload.get("sub", "?")
-                info["exp"] = payload.get("exp", "?")
-                info["role"] = payload.get("role", "?")
-            except Exception as e:
-                info["decode_status"] = "error"
-                info["decode_error"] = str(e)
-    except ImportError:
-        info["library"] = "PyJWT-fallback"
+    if token:
+        try:
+            payload = jwt.decode(
+                token,
+                os.getenv("SUPABASE_JWT_SECRET", ""),
+                algorithms=["HS256"],
+                options={"verify_aud": False, "verify_iss": False},
+            )
+            info["decode_status"] = "success"
+            info["sub"] = payload.get("sub", "?")
+            info["exp"] = payload.get("exp", "?")
+            info["role"] = payload.get("role", "?")
+        except Exception as e:
+            info["decode_status"] = "error"
+            info["decode_error"] = f"{type(e).__name__}: {e}"
+
     return info
