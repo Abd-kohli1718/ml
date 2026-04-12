@@ -1,9 +1,24 @@
 /**
  * api.js — API helper for making authenticated requests to the backend.
- * Automatically attaches the JWT Bearer token from localStorage.
+ * Automatically refreshes and attaches the JWT Bearer token.
  */
 
+import { supabase } from './supabase'
+
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
+
+/**
+ * Get a fresh access token — refreshes automatically if expired.
+ */
+async function getFreshToken() {
+  const { data: { session }, error } = await supabase.auth.getSession()
+  if (error || !session) {
+    throw new Error('Not authenticated. Please sign in again.')
+  }
+  // Update localStorage with fresh token
+  localStorage.setItem('access_token', session.access_token)
+  return session.access_token
+}
 
 /**
  * Make an authenticated API request.
@@ -12,13 +27,13 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
  * @returns {Promise<any>} - The JSON response
  */
 export async function apiFetch(endpoint, options = {}) {
-  const token = localStorage.getItem('access_token')
+  // Always get a fresh token (Supabase auto-refreshes if expired)
+  const token = await getFreshToken()
 
   const headers = {
     ...options.headers,
   }
 
-  // Add auth header if we have a token
   if (token) {
     headers['Authorization'] = `Bearer ${token}`
   }
