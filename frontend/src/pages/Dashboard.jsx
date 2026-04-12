@@ -1,9 +1,28 @@
+import { useRef, useCallback, useState } from 'react'
+import { useTransition } from '../components/PageTransition'
 import Sidebar from '../components/Sidebar'
 import HowItWorks from '../components/HowItWorks'
 import MicRecorder from '../components/MicRecorder'
 import './Dashboard.css'
 
 function Dashboard() {
+  const { navigateWithTransition } = useTransition()
+  const longPressTimer = useRef(null)
+  const [holdHint, setHoldHint] = useState(false)
+
+  // Long-press to open Record page (mobile)
+  const handlePressStart = useCallback((e) => {
+    longPressTimer.current = setTimeout(() => {
+      setHoldHint(false)
+      navigateWithTransition('/record')
+    }, 600) // 600ms hold
+    setHoldHint(true)
+  }, [navigateWithTransition])
+
+  const handlePressEnd = useCallback(() => {
+    clearTimeout(longPressTimer.current)
+    setHoldHint(false)
+  }, [])
 
   return (
     <div className="dashboard-page">
@@ -69,9 +88,25 @@ function Dashboard() {
           <HowItWorks />
         </div>
 
-        {/* ---- RIGHT PAGE (Light) ---- */}
-        <div className="notebook-page page-right">
+        {/* ---- RIGHT PAGE (Light) — long press opens Record on mobile ---- */}
+        <div
+          className="notebook-page page-right"
+          onTouchStart={handlePressStart}
+          onTouchEnd={handlePressEnd}
+          onTouchCancel={handlePressEnd}
+          onMouseDown={handlePressStart}
+          onMouseUp={handlePressEnd}
+          onMouseLeave={handlePressEnd}
+        >
           <MicRecorder />
+          {/* Mobile hold hint */}
+          <div className={`hold-hint ${holdHint ? 'show' : ''}`}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
+              <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+            </svg>
+            Hold to record...
+          </div>
         </div>
       </div>
     </div>

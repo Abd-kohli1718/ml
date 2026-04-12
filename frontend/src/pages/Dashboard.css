@@ -445,4 +445,9 @@
   .ribbon-bookmark {
     display: none;
   }
+
+  /* Hold-to-record hint */
+  .hold-hint {
+    display: flex;
+  }
 }

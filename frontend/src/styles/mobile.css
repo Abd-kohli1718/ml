@@ -3,6 +3,41 @@
    Optimized for phones (< 768px)
    ============================================ */
 
+/* ---- HOLD-TO-RECORD HINT ---- */
+.hold-hint {
+  display: none;
+  position: fixed;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%) translateY(10px);
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: rgba(58, 51, 44, 0.92);
+  backdrop-filter: blur(12px);
+  color: rgba(245, 240, 230, 0.85);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.78rem;
+  font-weight: 500;
+  border-radius: 30px;
+  box-shadow: 0 6px 24px rgba(0,0,0, 0.3);
+  opacity: 0;
+  transition: all 0.25s ease;
+  z-index: 999;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.hold-hint.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.hold-hint svg {
+  color: #E8A84C;
+  flex-shrink: 0;
+}
+
 /* ============================================
    GLOBAL: NOTEBOOK LAYOUT → SINGLE COLUMN
    ============================================ */
