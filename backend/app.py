@@ -8,6 +8,7 @@ Sets up:
     - Health-check endpoint at /api/health
 """
 
+import os
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -94,3 +95,21 @@ async def health_check():
         "service": "Voice Health API",
         "version": "1.0.0",
     }
+
+
+@app.get("/api/debug/jwt", tags=["System"])
+async def debug_jwt():
+    """Temporary debug endpoint — check JWT library and config."""
+    info = {"jwt_secret_set": bool(os.getenv("SUPABASE_JWT_SECRET"))}
+    try:
+        from jose import jwt as jose_jwt
+        info["library"] = "python-jose"
+        info["jose_version"] = True
+    except ImportError:
+        info["library"] = "PyJWT-fallback"
+    try:
+        import jwt
+        info["pyjwt_version"] = jwt.__version__
+    except Exception:
+        pass
+    return info

@@ -10,4 +10,5 @@ uvicorn[standard]
 supabase
 python-dotenv
 python-multipart
+python-jose[cryptography]
 PyJWT
