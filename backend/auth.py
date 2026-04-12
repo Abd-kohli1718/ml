@@ -6,7 +6,6 @@ No network call to Supabase on every request — fast sub-millisecond verificati
 """
 
 import os
-import jwt
 from dotenv import load_dotenv
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
@@ -19,6 +18,36 @@ JWT_AUDIENCE = "authenticated"
 
 # FastAPI security scheme — extracts Bearer token from Authorization header
 security = HTTPBearer(auto_error=False)
+
+
+# Try python-jose first (installed by supabase), fall back to PyJWT
+try:
+    from jose import jwt as jose_jwt, JWTError as JoseJWTError
+
+    def _decode_token(token: str) -> dict:
+        return jose_jwt.decode(
+            token,
+            JWT_SECRET,
+            algorithms=[JWT_ALGORITHM],
+            audience=JWT_AUDIENCE,
+        )
+
+    _ExpiredError = JoseJWTError
+    _InvalidError = JoseJWTError
+
+except ImportError:
+    import jwt as pyjwt
+
+    def _decode_token(token: str) -> dict:
+        return pyjwt.decode(
+            token,
+            JWT_SECRET,
+            algorithms=[JWT_ALGORITHM],
+            audience=JWT_AUDIENCE,
+        )
+
+    _ExpiredError = pyjwt.ExpiredSignatureError
+    _InvalidError = pyjwt.InvalidTokenError
 
 
 def verify_token(token: str) -> dict:
@@ -38,19 +67,14 @@ def verify_token(token: str) -> dict:
         )
 
     try:
-        payload = jwt.decode(
-            token,
-            JWT_SECRET,
-            algorithms=[JWT_ALGORITHM],
-            audience=JWT_AUDIENCE,
-        )
+        payload = _decode_token(token)
         return payload
-    except jwt.ExpiredSignatureError:
+    except _ExpiredError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Token has expired",
         )
-    except jwt.InvalidTokenError as e:
+    except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=f"Invalid token: {e}",
