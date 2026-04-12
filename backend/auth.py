@@ -22,17 +22,19 @@ security = HTTPBearer(auto_error=False)
 
 # Try python-jose first (installed by supabase), fall back to PyJWT
 try:
-    from jose import jwt as jose_jwt, JWTError as JoseJWTError
+    from jose import jwt as jose_jwt
+    from jose.exceptions import ExpiredSignatureError as JoseExpiredError
+    from jose.exceptions import JWTError as JoseJWTError
 
     def _decode_token(token: str) -> dict:
         return jose_jwt.decode(
             token,
             JWT_SECRET,
             algorithms=[JWT_ALGORITHM],
-            audience=JWT_AUDIENCE,
+            options={"verify_aud": False},
         )
 
-    _ExpiredError = JoseJWTError
+    _ExpiredError = JoseExpiredError
     _InvalidError = JoseJWTError
 
 except ImportError:
@@ -43,7 +45,7 @@ except ImportError:
             token,
             JWT_SECRET,
             algorithms=[JWT_ALGORITHM],
-            audience=JWT_AUDIENCE,
+            options={"verify_aud": False},
         )
 
     _ExpiredError = pyjwt.ExpiredSignatureError
