@@ -1,0 +1,191 @@
+/* ============================================
+   SIDEBAR - Dark Left Page (Full Height)
+   ============================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@400;500;600&display=swap');
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 48px 28px 36px;
+  position: relative;
+  z-index: 2;
+}
+
+/* ---- HEADER ---- */
+.sidebar-header {
+  margin-bottom: 40px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  position: relative;
+}
+
+/* Decorative accent line under title */
+.sidebar-header::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 50px;
+  height: 2px;
+  background: linear-gradient(90deg, rgba(180, 160, 130, 0.5), transparent);
+}
+
+.sidebar-title {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 1.85rem;
+  font-weight: 700;
+  color: #f5f0e6;
+  margin: 0 0 6px 0;
+  letter-spacing: -0.3px;
+  line-height: 1.2;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.sidebar-subtitle {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: rgba(245, 240, 230, 0.4);
+  margin: 0;
+  letter-spacing: 0.5px;
+}
+
+/* ---- NAVIGATION ---- */
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+}
+
+.sidebar-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 13px 16px;
+  border-radius: 12px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  color: rgba(245, 240, 230, 0.45);
+  font-family: 'Inter', sans-serif;
+}
+
+.sidebar-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(245, 240, 230, 0.8);
+  transform: translateX(4px);
+}
+
+.sidebar-item.active {
+  background: linear-gradient(135deg, rgba(180, 160, 130, 0.15), rgba(255, 255, 255, 0.08));
+  color: #f5f0e6;
+  box-shadow:
+    0 2px 16px rgba(0, 0, 0, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.active-glow {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(180, 160, 130, 0.06), transparent);
+  pointer-events: none;
+  border-radius: 12px;
+}
+
+.sidebar-item-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.sidebar-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+.sidebar-item:hover .sidebar-icon {
+  transform: scale(1.1);
+}
+
+.sidebar-label {
+  font-size: 0.9rem;
+  font-weight: 500;
+  letter-spacing: 0.2px;
+}
+
+/* ---- TOGGLE DOTS ---- */
+.sidebar-item-right {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.toggle-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+}
+
+.toggle-dot.on {
+  background: rgba(180, 160, 130, 0.65);
+  box-shadow: 0 0 8px rgba(180, 160, 130, 0.3);
+}
+
+.toggle-dot.secondary {
+  width: 8px;
+  height: 8px;
+}
+
+.toggle-dot.secondary.on {
+  background: rgba(255, 255, 255, 0.2);
+  box-shadow: none;
+}
+
+/* ---- FOOTER / HANDWRITTEN ---- */
+.sidebar-footer {
+  margin-top: auto;
+  padding-top: 28px;
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
+  position: relative;
+}
+
+/* Decorative flourish */
+.sidebar-footer::before {
+  content: '~';
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: 'Caveat', cursive;
+  font-size: 1.2rem;
+  color: rgba(255, 255, 255, 0.08);
+}
+
+.handwritten-text {
+  font-family: 'Caveat', cursive;
+  font-size: 1.15rem;
+  color: rgba(245, 240, 230, 0.2);
+  margin: 0;
+  line-height: 1.7;
+  font-weight: 400;
+  font-style: italic;
+}
+
+.handwritten-text.secondary {
+  font-size: 1.05rem;
+  color: rgba(245, 240, 230, 0.14);
+}

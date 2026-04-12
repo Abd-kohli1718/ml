@@ -1,0 +1,100 @@
+/* ============================================
+   FORM INPUT - Floating Label Style
+   ============================================ */
+
+.form-input-wrapper {
+  position: relative;
+  margin-bottom: 0;
+}
+
+/* Stacked inputs - no gap, connected borders */
+.form-input-wrapper + .form-input-wrapper {
+  margin-top: -1px;
+}
+
+.form-input {
+  width: 100%;
+  padding: 18px 16px 8px;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 400;
+  color: #2d3436;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid #d5d0c8;
+  border-radius: 0;
+  transition: all 0.25s ease;
+  position: relative;
+  z-index: 1;
+}
+
+/* First input rounded top */
+.form-input-wrapper:first-child .form-input {
+  border-radius: 12px 12px 0 0;
+}
+
+/* Last input rounded bottom */
+.form-input-wrapper:last-child .form-input {
+  border-radius: 0 0 12px 12px;
+}
+
+/* Only input - all corners rounded */
+.form-input-wrapper:only-child .form-input {
+  border-radius: 12px;
+}
+
+.form-input:focus {
+  background: rgba(255, 255, 255, 0.95);
+  border-color: #6bb9b0;
+  box-shadow: 0 0 0 3px rgba(107, 185, 176, 0.12);
+  z-index: 2;
+}
+
+.form-input::placeholder {
+  color: transparent;
+}
+
+/* Floating label */
+.form-label {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 400;
+  color: #999;
+  pointer-events: none;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 3;
+}
+
+/* Float up when focused or has value */
+.form-input:focus ~ .form-label,
+.form-input:not(:placeholder-shown) ~ .form-label {
+  top: 12px;
+  transform: translateY(0);
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: #6bb9b0;
+  letter-spacing: 0.3px;
+}
+
+/* Bottom highlight bar */
+.form-input-highlight {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #6bb9b0, #88d4cb);
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  transform: translateX(-50%);
+  z-index: 3;
+  border-radius: 0 0 12px 12px;
+}
+
+.form-input:focus ~ .form-input-highlight {
+  width: 100%;
+  left: 0;
+  transform: translateX(0);
+}

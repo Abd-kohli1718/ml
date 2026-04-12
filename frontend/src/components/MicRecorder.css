@@ -1,0 +1,305 @@
+/* ============================================
+   MIC RECORDER - Press & Hold Interaction
+   ============================================ */
+
+.mic-recorder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 48px 36px;
+  height: 100%;
+  justify-content: center;
+  gap: 6px;
+  position: relative;
+  z-index: 1;
+}
+
+/* ---- TITLE ---- */
+.recorder-title {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #2d2520;
+  margin: 0 0 24px 0;
+  letter-spacing: -0.3px;
+  position: relative;
+}
+
+.recorder-title::after {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 36px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #8B7355, transparent);
+  border-radius: 1px;
+}
+
+/* ============================================
+   MIC CIRCLE - HOLD INTERACTION
+   ============================================ */
+
+.mic-circle-wrapper {
+  position: relative;
+  width: 200px;
+  height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 12px;
+  --glow-intensity: 0;
+  --progress-color: rgba(180, 140, 80, 0.3);
+}
+
+/* Outer decorative ring */
+.mic-circle-wrapper::before {
+  content: '';
+  position: absolute;
+  width: 195px;
+  height: 195px;
+  border-radius: 50%;
+  border: 1px solid rgba(139, 115, 85, 0.08);
+  z-index: 1;
+  transition: border-color 0.3s ease;
+}
+
+.mic-circle-wrapper.holding::before {
+  border-color: rgba(212, 148, 58, 0.2);
+}
+
+.mic-circle-wrapper.completed::before {
+  border-color: rgba(212, 148, 58, 0.4);
+}
+
+/* Dynamic glow behind circle while holding */
+.mic-circle-wrapper::after {
+  content: '';
+  position: absolute;
+  width: 170px;
+  height: 170px;
+  border-radius: 50%;
+  background: var(--progress-color);
+  filter: blur(30px);
+  opacity: var(--glow-intensity);
+  z-index: 0;
+  transition: opacity 0.1s linear;
+}
+
+/* Progress ring SVG */
+.progress-ring {
+  position: absolute;
+  width: 200px;
+  height: 200px;
+  z-index: 2;
+}
+
+.progress-arc {
+  transition: stroke-dashoffset 0.05s linear;
+  filter: drop-shadow(0 0 4px rgba(212, 148, 58, 0.3));
+}
+
+/* Inner circle */
+.mic-inner-circle {
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  background: linear-gradient(145deg, #f7f3ed, #ebe5da);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 3;
+  position: relative;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow:
+    0 6px 24px rgba(0, 0, 0, 0.07),
+    0 2px 8px rgba(0, 0, 0, 0.04),
+    inset 0 3px 6px rgba(255, 255, 255, 0.7),
+    inset 0 -3px 6px rgba(0, 0, 0, 0.04);
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.mic-inner-circle:hover {
+  box-shadow:
+    0 10px 36px rgba(0, 0, 0, 0.12),
+    0 4px 12px rgba(0, 0, 0, 0.06),
+    inset 0 3px 6px rgba(255, 255, 255, 0.7),
+    inset 0 -3px 6px rgba(0, 0, 0, 0.04);
+}
+
+/* Holding state - pressed feel */
+.mic-circle-wrapper.holding .mic-inner-circle {
+  box-shadow:
+    0 4px 16px rgba(212, 148, 58, 0.2),
+    0 2px 6px rgba(0, 0, 0, 0.06),
+    inset 0 3px 6px rgba(255, 255, 255, 0.5),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.05);
+}
+
+/* Completed state */
+.mic-circle-wrapper.completed .mic-inner-circle {
+  box-shadow:
+    0 8px 32px rgba(212, 148, 58, 0.3),
+    0 4px 12px rgba(0, 0, 0, 0.06),
+    inset 0 3px 6px rgba(255, 255, 255, 0.5),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.mic-icon-wrapper {
+  color: #5c4e3c;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.mic-circle-wrapper.holding .mic-icon-wrapper {
+  color: #C87B28;
+  animation: micBreath 0.8s ease-in-out infinite;
+}
+
+.mic-circle-wrapper.completed .mic-icon-wrapper {
+  color: #D4943A;
+}
+
+@keyframes micBreath {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+}
+
+/* ---- COMPLETION FLASH ---- */
+.completion-flash {
+  position: absolute;
+  width: 160px;
+  height: 160px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(232, 168, 76, 0.3), transparent 70%);
+  z-index: 1;
+  animation: flashPulse 0.4s ease-out forwards;
+}
+
+@keyframes flashPulse {
+  0% { transform: scale(1); opacity: 1; }
+  100% { transform: scale(1.8); opacity: 0; }
+}
+
+/* ---- PULSE RINGS ---- */
+.pulse-ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 1.5px solid rgba(212, 148, 58, 0.2);
+  z-index: 1;
+  animation: pulseExpand 2s ease-out infinite;
+}
+
+.ring-1 { width: 160px; height: 160px; animation-delay: 0s; }
+.ring-2 { width: 175px; height: 175px; animation-delay: 0.5s; }
+.ring-3 { width: 190px; height: 190px; animation-delay: 1s; }
+
+@keyframes pulseExpand {
+  0% { transform: scale(1); opacity: 0.5; }
+  100% { transform: scale(1.4); opacity: 0; }
+}
+
+/* ---- PROGRESS LABEL ---- */
+.hold-progress-label {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #C87B28;
+  letter-spacing: 1px;
+  margin-top: -4px;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ---- INSTRUCTIONS ---- */
+.recorder-instructions {
+  margin: 10px 0 14px;
+}
+
+.instruction-title {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #2d2520;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin: 0 0 8px 0;
+  position: relative;
+  display: inline-block;
+}
+
+.instruction-title::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: -4px;
+  right: -4px;
+  height: 6px;
+  background: rgba(139, 115, 85, 0.08);
+  border-radius: 2px;
+  z-index: -1;
+}
+
+.instruction-text {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.78rem;
+  font-weight: 400;
+  color: #aaa;
+  line-height: 1.7;
+  margin: 0;
+}
+
+/* ---- HOLD HINT ---- */
+.hold-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 24px;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: #8B7355;
+  background: rgba(139, 115, 85, 0.06);
+  border: 1px solid rgba(139, 115, 85, 0.1);
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  letter-spacing: 0.3px;
+}
+
+.hold-hint.active {
+  color: #C87B28;
+  background: rgba(212, 148, 58, 0.08);
+  border-color: rgba(212, 148, 58, 0.2);
+  animation: hintPulse 1s ease-in-out infinite;
+}
+
+.hold-hint-icon {
+  font-size: 0.65rem;
+  transition: color 0.3s ease;
+}
+
+.hold-hint.active .hold-hint-icon {
+  color: #D4943A;
+  animation: dotBlink 1s ease infinite;
+}
+
+@keyframes hintPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(212, 148, 58, 0); }
+  50% { box-shadow: 0 0 0 6px rgba(212, 148, 58, 0.06); }
+}
+
+@keyframes dotBlink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}

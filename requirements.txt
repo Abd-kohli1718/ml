@@ -1,4 +1,13 @@
+# ML pipeline
 numpy
 librosa
 scipy
 sounddevice
+
+# Backend
+fastapi
+uvicorn[standard]
+supabase
+python-dotenv
+python-multipart
+PyJWT

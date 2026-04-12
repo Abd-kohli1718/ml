@@ -1,0 +1,221 @@
+/* ============================================
+   PAGE TRANSITION - Cinematic Video Overlay
+   Premium full-screen transition system
+   ============================================ */
+
+/* ---- OVERLAY CONTAINER ---- */
+.page-transition-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: all;
+  /* Initial state: invisible */
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+              visibility 0s linear 0.4s;
+}
+
+.page-transition-overlay.active {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+              visibility 0s linear 0s;
+}
+
+.page-transition-overlay.fade-out {
+  opacity: 0;
+  transition: opacity 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ---- BACKDROP (dark background behind video) ---- */
+.transition-backdrop {
+  position: absolute;
+  inset: 0;
+  background: #1a1610;
+  z-index: 1;
+}
+
+/* ---- VIDEO ELEMENT ---- */
+.transition-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 2;
+}
+
+/* ---- CSS FALLBACK ANIMATION ---- */
+/* Used when video file is not available */
+.transition-fallback {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  overflow: hidden;
+  background: #1a1610;
+}
+
+/* Animated notebook page flip effect */
+.fallback-page {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+}
+
+.fallback-page-left {
+  background: linear-gradient(
+    165deg,
+    #4a4038 0%,
+    #3a332c 30%,
+    #322b25 60%,
+    #2a2520 100%
+  );
+  animation: pageFlipLeft 0.8s cubic-bezier(0.65, 0, 0.35, 1) forwards;
+  transform-origin: right center;
+}
+
+.fallback-page-right {
+  background: linear-gradient(
+    175deg,
+    #f0e8d4 0%,
+    #e8dfca 40%,
+    #e2d9c2 100%
+  );
+  animation: pageFlipRight 0.8s cubic-bezier(0.65, 0, 0.35, 1) 0.15s forwards;
+  transform-origin: left center;
+  opacity: 0;
+}
+
+/* Spine line */
+.fallback-spine {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 100%;
+  background: linear-gradient(
+    180deg,
+    #6e5f4c 0%,
+    #4a3f32 30%,
+    #352e24 50%,
+    #4a3f32 70%,
+    #6e5f4c 100%
+  );
+  z-index: 5;
+  opacity: 0;
+  animation: spineReveal 0.5s ease 0.3s forwards;
+}
+
+/* Decorative waveform pulse */
+.fallback-pulse {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 80px;
+  height: 80px;
+  z-index: 10;
+  opacity: 0;
+  animation: pulseReveal 0.6s ease 0.25s forwards;
+}
+
+.fallback-pulse-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid rgba(212, 148, 58, 0.4);
+  animation: pulseExpand 1s ease-out infinite;
+}
+
+.fallback-pulse-ring:nth-child(2) {
+  animation-delay: 0.3s;
+}
+
+.fallback-pulse-ring:nth-child(3) {
+  animation-delay: 0.6s;
+}
+
+.fallback-pulse-dot {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #E8A84C, #D4943A);
+  box-shadow: 0 0 20px rgba(212, 148, 58, 0.5);
+}
+
+/* ---- BLOCK INTERACTION DURING TRANSITION ---- */
+.page-transition-overlay.active ~ *,
+body.transitioning * {
+  pointer-events: none !important;
+  user-select: none !important;
+}
+
+body.transitioning {
+  overflow: hidden;
+}
+
+/* ---- KEYFRAMES ---- */
+@keyframes pageFlipLeft {
+  0% {
+    clip-path: inset(0 100% 0 0);
+  }
+  100% {
+    clip-path: inset(0 50% 0 0);
+  }
+}
+
+@keyframes pageFlipRight {
+  0% {
+    opacity: 1;
+    clip-path: inset(0 0 0 100%);
+  }
+  100% {
+    opacity: 1;
+    clip-path: inset(0 0 0 50%);
+  }
+}
+
+@keyframes spineReveal {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) scaleY(0);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(-50%) scaleY(1);
+  }
+}
+
+@keyframes pulseReveal {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.5);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+@keyframes pulseExpand {
+  0% {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+  100% {
+    transform: scale(2.5);
+    opacity: 0;
+  }
+}

@@ -1,0 +1,448 @@
+/* ============================================
+   DASHBOARD - Full-Page Immersive Notebook
+   ============================================ */
+
+/* ---- FULL PAGE CONTAINER ---- */
+.dashboard-page {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  background: #322b25;
+}
+
+/* Desk grain texture (hidden in full-page mode) */
+.desk-texture {
+  display: none;
+}
+
+/* Inner vignette */
+.desk-texture::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse at center,
+    transparent 40%,
+    rgba(0, 0, 0, 0.08) 100%
+  );
+}
+
+/* ============================================
+   THE NOTEBOOK - FULL PAGE
+   ============================================ */
+.notebook {
+  position: relative;
+  display: flex;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  /* Outer shadow */
+  box-shadow:
+    0 0 80px rgba(0, 0, 0, 0.15),
+    0 0 30px rgba(0, 0, 0, 0.08);
+}
+
+/* ---- LEATHER BINDING (integrated into full-page mode) ---- */
+.book-binding-left,
+.book-binding-right {
+  display: none;
+}
+
+.book-binding-right {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 10px;
+  background: linear-gradient(
+    180deg,
+    #8a7b62 0%,
+    #7B6850 20%,
+    #6e5d48 50%,
+    #7B6850 80%,
+    #8a7b62 100%
+  );
+  z-index: 20;
+  box-shadow:
+    inset 3px 0 6px rgba(0, 0, 0, 0.2),
+    -3px 0 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Leather stitching on bindings */
+.book-binding-left::before,
+.book-binding-right::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  width: 1px;
+  height: 100%;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0px,
+    transparent 8px,
+    rgba(255, 255, 255, 0.12) 8px,
+    rgba(255, 255, 255, 0.12) 14px
+  );
+}
+
+.book-binding-left::before {
+  right: 2px;
+}
+
+.book-binding-right::before {
+  left: 2px;
+}
+
+/* ---- BOOK EDGE TABS (hidden in full-page mode) ---- */
+.book-tabs {
+  display: none;
+}
+
+.book-tab {
+  width: 28px;
+  height: 36px;
+  background: linear-gradient(135deg, #5c4e3c, #4a3f32);
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(245, 240, 230, 0.5);
+  cursor: pointer;
+  transition: all 0.25s ease;
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.book-tab:hover {
+  background: linear-gradient(135deg, #6e5e4a, #5c4e3c);
+  color: rgba(245, 240, 230, 0.9);
+  transform: translateX(-2px);
+}
+
+.book-tabs-right .book-tab {
+  background: linear-gradient(135deg, #d4c9b5, #c0b5a0);
+  color: rgba(80, 60, 40, 0.5);
+  box-shadow:
+    0 2px 8px rgba(0, 0, 0, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.book-tabs-right .book-tab:hover {
+  background: linear-gradient(135deg, #c8bda8, #b8ad98);
+  color: rgba(80, 60, 40, 0.8);
+  transform: translateX(2px);
+}
+
+.tab-mark {
+  background: linear-gradient(135deg, #a89880, #968870) !important;
+  height: 28px;
+}
+
+/* ============================================
+   NOTEBOOK PAGES - FULL HEIGHT
+   ============================================ */
+.notebook-page {
+  position: relative;
+  overflow: hidden;
+  height: 100%;
+}
+
+/* ---- LEFT PAGE (Dark sidebar) ---- */
+.page-left {
+  flex: 0 0 260px;
+  background: linear-gradient(
+    165deg,
+    #4a4038 0%,
+    #3a332c 20%,
+    #322b25 50%,
+    #2a2520 80%,
+    #252018 100%
+  );
+  position: relative;
+}
+
+/* Paper texture on dark page */
+.page-left::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    repeating-linear-gradient(
+      transparent,
+      transparent 32px,
+      rgba(255, 255, 255, 0.012) 32px,
+      rgba(255, 255, 255, 0.012) 33px
+    );
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Inner shadow from spine */
+.page-left::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 40px;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.15));
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Warm ambient glow on dark page */
+.page-left > * {
+  position: relative;
+  z-index: 2;
+}
+
+/* ---- CENTER SPINE ---- */
+.notebook-spine {
+  flex: 0 0 18px;
+  position: relative;
+  z-index: 20;
+  background: linear-gradient(
+    90deg,
+    #6e5f4c 0%,
+    #5c4e3c 15%,
+    #4a3f32 30%,
+    #3e352a 45%,
+    #352e24 50%,
+    #3e352a 55%,
+    #4a3f32 70%,
+    #5c4e3c 85%,
+    #6e5f4c 100%
+  );
+  box-shadow:
+    -2px 0 8px rgba(0, 0, 0, 0.15),
+    2px 0 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Spine fold line */
+.spine-fold {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 1px;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.35);
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Spine shadows */
+.spine-shadow-left {
+  position: absolute;
+  top: 0;
+  left: -12px;
+  width: 12px;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.12));
+  pointer-events: none;
+}
+
+.spine-shadow-right {
+  position: absolute;
+  top: 0;
+  right: -12px;
+  width: 12px;
+  height: 100%;
+  background: linear-gradient(270deg, transparent, rgba(0, 0, 0, 0.08));
+  pointer-events: none;
+}
+
+/* Spine highlight */
+.notebook-spine::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 40%;
+  width: 2px;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.06);
+  filter: blur(1px);
+}
+
+/* Ribbon bookmark */
+.ribbon-bookmark {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 12px;
+  height: 100%;
+  z-index: 25;
+  overflow: visible;
+}
+
+.ribbon-tail {
+  position: absolute;
+  bottom: -30px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 14px;
+  height: 55px;
+  background: linear-gradient(180deg, #6B5840, #4a3f32, #3a302a);
+  clip-path: polygon(0 0, 100% 0, 100% 80%, 50% 100%, 0 80%);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.ribbon-bookmark::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 12px;
+  height: 100%;
+  background: linear-gradient(180deg,
+    rgba(107, 88, 64, 0.5) 0%,
+    rgba(90, 74, 54, 0.3) 50%,
+    rgba(107, 88, 64, 0.5) 100%
+  );
+}
+
+/* ---- CENTER CONTENT (How It Works) ---- */
+.page-center {
+  flex: 0 0 240px;
+  background: linear-gradient(
+    175deg,
+    #f2eddf 0%,
+    #ede7d8 30%,
+    #e8e1d2 60%,
+    #e5ded0 100%
+  );
+  position: relative;
+  border-right: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+/* Paper lines */
+.page-center::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    repeating-linear-gradient(
+      transparent,
+      transparent 32px,
+      rgba(170, 160, 140, 0.12) 32px,
+      rgba(170, 160, 140, 0.12) 33px
+    );
+  pointer-events: none;
+}
+
+/* Left margin line */
+.page-center::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 8px;
+  height: 100%;
+  background: linear-gradient(90deg, rgba(0,0,0,0.04), transparent);
+  pointer-events: none;
+}
+
+/* ---- RIGHT PAGE (Light - Mic Recorder) ---- */
+.page-right {
+  flex: 1;
+  background: linear-gradient(
+    170deg,
+    #faf7f0 0%,
+    #f7f3eb 20%,
+    #f3efe5 50%,
+    #f0ebdf 100%
+  );
+  position: relative;
+}
+
+/* Paper lines */
+.page-right::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    repeating-linear-gradient(
+      transparent,
+      transparent 32px,
+      rgba(170, 160, 140, 0.06) 32px,
+      rgba(170, 160, 140, 0.06) 33px
+    );
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Warm ambient glow */
+.page-right::after {
+  content: '';
+  position: absolute;
+  top: 15%;
+  right: 10%;
+  width: 250px;
+  height: 250px;
+  background: radial-gradient(circle, rgba(107, 185, 176, 0.04) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+@media (max-width: 1000px) {
+  .page-left {
+    flex: 0 0 220px;
+  }
+  .page-center {
+    flex: 0 0 200px;
+  }
+}
+
+@media (max-width: 850px) {
+  .notebook {
+    flex-direction: column;
+  }
+
+  .page-left {
+    flex: 0 0 auto;
+    margin-left: 0;
+    padding-bottom: 8px;
+  }
+
+  .page-right {
+    margin-right: 0;
+  }
+
+  .notebook-spine {
+    flex: 0 0 14px;
+    background: linear-gradient(
+      180deg,
+      #6e5f4c 0%,
+      #4a3f32 50%,
+      #6e5f4c 100%
+    );
+  }
+
+  .spine-fold {
+    top: 50%;
+    left: 0;
+    width: 100%;
+    height: 1px;
+    transform: none;
+  }
+
+  .page-center {
+    flex: 0 0 auto;
+  }
+
+  .book-tabs,
+  .book-binding-left,
+  .book-binding-right,
+  .ribbon-bookmark {
+    display: none;
+  }
+}

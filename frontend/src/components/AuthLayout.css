@@ -1,0 +1,196 @@
+/* ============================================
+   AUTH LAYOUT - Split Background + Glass Card
+   ============================================ */
+
+.auth-page {
+  position: relative;
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+/* ---- SPLIT BACKGROUND ---- */
+.auth-bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  z-index: 0;
+}
+
+.auth-bg-left {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+}
+
+.auth-bg-right {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+}
+
+.bg-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+/* Subtle overlays for blending */
+.bg-left-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(245, 240, 228, 0.3) 0%,
+    rgba(245, 240, 228, 0.1) 50%,
+    rgba(245, 240, 228, 0.4) 100%
+  );
+  pointer-events: none;
+}
+
+.bg-right-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    225deg,
+    rgba(107, 185, 176, 0.15) 0%,
+    rgba(107, 185, 176, 0.05) 50%,
+    rgba(107, 185, 176, 0.2) 100%
+  );
+  pointer-events: none;
+}
+
+/* ---- FLOATING ELEMENTS ---- */
+.floating-element {
+  position: absolute;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.float-1 {
+  top: 15%;
+  right: 20%;
+  animation: floatA 8s ease-in-out infinite;
+}
+
+.float-2 {
+  bottom: 25%;
+  right: 30%;
+  animation: floatB 10s ease-in-out infinite;
+}
+
+.float-3 {
+  top: 20%;
+  left: 25%;
+  animation: floatA 9s ease-in-out infinite reverse;
+}
+
+.float-4 {
+  bottom: 20%;
+  left: 15%;
+  animation: floatB 7s ease-in-out infinite reverse;
+}
+
+@keyframes floatA {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-15px) rotate(5deg); }
+}
+
+@keyframes floatB {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(12px) rotate(-4deg); }
+}
+
+/* ---- GLASS CARD ---- */
+.auth-card-container {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  width: 100%;
+  min-height: 100vh;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 460px;
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.08),
+    0 2px 8px rgba(0, 0, 0, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  position: relative;
+  overflow: hidden;
+  animation: cardEnter 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Subtle top highlight glow */
+.auth-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80%;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(107, 185, 176, 0.5),
+    transparent
+  );
+}
+
+.auth-card-inner {
+  padding: 48px 40px;
+}
+
+@keyframes cardEnter {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ---- RESPONSIVE ---- */
+@media (max-width: 768px) {
+  .auth-bg-left {
+    display: none;
+  }
+  .auth-bg-right {
+    flex: 1;
+  }
+  .auth-card-inner {
+    padding: 36px 28px;
+  }
+  .auth-card {
+    max-width: 100%;
+    border-radius: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .auth-card-container {
+    padding: 16px;
+  }
+  .auth-card-inner {
+    padding: 32px 24px;
+  }
+}
