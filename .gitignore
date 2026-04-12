@@ -8,8 +8,8 @@ env/
 .DS_Store
 
 # Data & recordings (large, private)
-data/
-recordings/
+/data/
+/recordings/
 
 # Test scripts
 test_*.py
