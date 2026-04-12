@@ -72,7 +72,7 @@ app.add_middleware(
         "http://localhost:5173",   # Vite dev server
         "http://localhost:3000",   # Next.js / CRA
         "http://localhost:8080",   # Generic dev
-        "*",                       # Allow all for hackathon demo
+        "https://ml-t5te.vercel.app", # Vercel Production
     ],
     allow_credentials=True,
     allow_methods=["*"],
