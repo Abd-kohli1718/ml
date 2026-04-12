@@ -8,16 +8,36 @@ import { supabase } from './supabase'
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
 
 /**
- * Get a fresh access token — refreshes automatically if expired.
+ * Get a fresh access token — forces a refresh if the current one is expired.
  */
 async function getFreshToken() {
-  const { data: { session }, error } = await supabase.auth.getSession()
-  if (error || !session) {
-    throw new Error('Not authenticated. Please sign in again.')
+  // First try the cached session
+  const { data: { session } } = await supabase.auth.getSession()
+
+  if (session) {
+    // Check if token expires within the next 60 seconds
+    const expiresAt = session.expires_at // unix timestamp in seconds
+    const now = Math.floor(Date.now() / 1000)
+
+    if (expiresAt && expiresAt > now + 60) {
+      // Token is still valid — use it
+      localStorage.setItem('access_token', session.access_token)
+      return session.access_token
+    }
   }
-  // Update localStorage with fresh token
-  localStorage.setItem('access_token', session.access_token)
-  return session.access_token
+
+  // Token is expired or about to expire — force refresh
+  const { data: { session: refreshed }, error } = await supabase.auth.refreshSession()
+  if (error || !refreshed) {
+    // Clear stale tokens
+    localStorage.removeItem('access_token')
+    localStorage.removeItem('refresh_token')
+    throw new Error('Session expired. Please sign in again.')
+  }
+
+  localStorage.setItem('access_token', refreshed.access_token)
+  localStorage.setItem('refresh_token', refreshed.refresh_token)
+  return refreshed.access_token
 }
 
 /**
