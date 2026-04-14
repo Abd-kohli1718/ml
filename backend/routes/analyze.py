@@ -32,7 +32,7 @@ async def analyze_audio(
     user_id = user["sub"]
 
     # Validate file type
-    allowed_ext = {".wav", ".mp3", ".ogg", ".flac", ".m4a"}
+    allowed_ext = {".wav", ".mp3", ".ogg", ".flac", ".m4a", ".webm"}
     _, ext = os.path.splitext(audio.filename or "upload.wav")
     if ext.lower() not in allowed_ext:
         raise HTTPException(
