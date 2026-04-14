@@ -4,7 +4,6 @@ import { useTransition } from '../components/PageTransition'
 import Sidebar from '../components/Sidebar'
 import HowItWorks from '../components/HowItWorks'
 import { fetchHistory } from '../lib/api'
-import historyData from '../data/historyData'
 import './History.css'
 import '../pages/Dashboard.css'
 
@@ -87,8 +86,8 @@ function VoiceCard({ entry, index, isHighlighted }) {
 
       {/* Meta row */}
       <div className="card-meta">
-        <span className="meta-item">Duration: <span>{entry.duration}</span></span>
-        <span className="meta-item">Avg Pitch: <span>{entry.pitch}</span></span>
+        <span className="meta-item">Score: <span>{entry.score}/100</span></span>
+        <span className="meta-item">Status: <span>{entry.statusLabel}</span></span>
       </div>
     </div>
   )
@@ -102,9 +101,9 @@ function History() {
   const [searchParams, setSearchParams] = useSearchParams()
   const highlightDate = searchParams.get('date') || null
 
-  // Real data from API, falls back to mock data
-  const [records, setRecords] = useState(historyData)
-  const [apiLoaded, setApiLoaded] = useState(false)
+  // Real data only — no dummy data
+  const [records, setRecords] = useState([])
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     requestAnimationFrame(() => setAnimateIn(true))
@@ -113,10 +112,10 @@ function History() {
   // Fetch real records from API
   useEffect(() => {
     async function loadRecords() {
+      setIsLoading(true)
       try {
         const data = await fetchHistory('all', 50)
         if (data.records && data.records.length > 0) {
-          // Transform API records to match card format
           const transformed = data.records.map((r, i) => {
             const statusInfo = mapStatus(r.status)
             const date = new Date(r.created_at)
@@ -134,11 +133,11 @@ function History() {
             }
           })
           setRecords(transformed)
-          setApiLoaded(true)
         }
       } catch (err) {
-        // Silently fall back to mock data
-        console.log('Using mock history data:', err.message)
+        console.error('Failed to load history:', err.message)
+      } finally {
+        setIsLoading(false)
       }
     }
     loadRecords()
@@ -212,7 +211,7 @@ function History() {
               <div className="history-header-text">
                 <h2 className="history-title">Your Voice History</h2>
                 <p className="history-subtitle">
-                  {apiLoaded ? 'Real analysis records from your voice sessions' : 'A record of your voice and health over time'}
+                  Real analysis records from your voice sessions
                 </p>
               </div>
               <button className="history-settings-btn" aria-label="Settings" id="btn-history-settings">
@@ -224,22 +223,24 @@ function History() {
             </div>
 
             {/* Stats Bar */}
-            <div className="history-stats">
-              <div className="history-stat">
-                <div className="stat-value">{totalRecords}</div>
-                <div className="stat-label">Total Records</div>
-              </div>
-              <div className="history-stat">
-                <div className={`stat-value ${getScoreCategory(avgScore) === 'good' ? 'good' : 'warn'}`}>
-                  {avgScore}
+            {records.length > 0 && (
+              <div className="history-stats">
+                <div className="history-stat">
+                  <div className="stat-value">{totalRecords}</div>
+                  <div className="stat-label">Total Records</div>
                 </div>
-                <div className="stat-label">Avg Score</div>
+                <div className="history-stat">
+                  <div className={`stat-value ${getScoreCategory(avgScore) === 'good' ? 'good' : 'warn'}`}>
+                    {avgScore}
+                  </div>
+                  <div className="stat-label">Avg Score</div>
+                </div>
+                <div className="history-stat">
+                  <div className="stat-value good">{normalCount}</div>
+                  <div className="stat-label">Normal Days</div>
+                </div>
               </div>
-              <div className="history-stat">
-                <div className="stat-value good">{normalCount}</div>
-                <div className="stat-label">Normal Days</div>
-              </div>
-            </div>
+            )}
 
             {/* Date filter banner (when navigated from Calendar) */}
             {highlightDate && (
@@ -261,17 +262,39 @@ function History() {
               </div>
             )}
 
+            {/* Loading State */}
+            {isLoading && (
+              <div className="history-empty">
+                <p style={{ color: '#b8a080', fontStyle: 'italic' }}>Loading your records...</p>
+              </div>
+            )}
+
+            {/* Empty State */}
+            {!isLoading && records.length === 0 && (
+              <div className="history-empty">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#b8a080" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginBottom: 16, opacity: 0.5 }}>
+                  <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
+                  <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                  <line x1="12" x2="12" y1="19" y2="22"/>
+                </svg>
+                <p style={{ color: '#b8a080', fontWeight: 500, fontSize: '1.05rem' }}>No recordings yet</p>
+                <p style={{ color: '#a09080', fontSize: '0.85rem', marginTop: 4 }}>Record your voice to see analysis results here</p>
+              </div>
+            )}
+
             {/* Cards Grid */}
-            <div className="history-grid">
-              {records.map((entry, index) => (
-                <VoiceCard
-                  key={entry.id}
-                  entry={entry}
-                  index={index}
-                  isHighlighted={highlightDate === entry.date}
-                />
-              ))}
-            </div>
+            {!isLoading && records.length > 0 && (
+              <div className="history-grid">
+                {records.map((entry, index) => (
+                  <VoiceCard
+                    key={entry.id}
+                    entry={entry}
+                    index={index}
+                    isHighlighted={highlightDate === entry.date}
+                  />
+                ))}
+              </div>
+            )}
 
           </div>
         </div>
