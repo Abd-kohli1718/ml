@@ -110,6 +110,10 @@ function Signup() {
           Already have an account? <Link to="/login" className="auth-link">Log in</Link>
         </p>
 
+        <p className="switch-text fade-in-up" style={{ marginTop: '16px', fontSize: '13px', color: '#8a7e6b' }}>
+          📱 <strong>Our App is downloadable!</strong> Install it from your browser menu for a seamless experience.
+        </p>
+
         <div className="divider fade-in-up">
           <span className="divider-line"></span>
           <span className="divider-text">or</span>
