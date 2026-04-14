@@ -11,7 +11,25 @@ A full-stack application that leverages machine learning to track your health th
 - **Health Insights:** Translates complex acoustic deviations into simple, easy-to-understand health observations and a 0-100 Health Score.
 - **History & Tracking:** Beautiful notebook-style UI to visualize your past recordings, complete with audio playback.
 - **Calendar & Analytics:** Track your voice health trends over time with dynamic donut and line charts.
+- **Dark Mode:** Toggle between light and dark themes for comfortable usage in any environment.
 - **PWA Support:** Installable on mobile devices via "Add to Home Screen" for native-like access.
+
+## 📱 Install as App (PWA)
+
+VoiceHealth is a **Progressive Web App** — you can install it on your device for a native app-like experience:
+
+### On Mobile (Android / iOS)
+1. Open the app in **Chrome** (Android) or **Safari** (iOS)
+2. Tap the **Share** button (iOS) or the **three-dot menu** (Android)
+3. Select **"Add to Home Screen"** / **"Install App"**
+4. The app will appear on your home screen with its own icon
+
+### On Desktop (Chrome / Edge)
+1. Open the app in your browser
+2. Click the **install icon** (⊕) in the address bar, or go to **Menu → Install VoiceHealth**
+3. The app will open in its own window like a native desktop app
+
+> **Benefits of installing:** Offline access, faster loading, full-screen experience, and push notification support.
 
 ## 🏗️ Architecture Stack
 
@@ -68,7 +86,7 @@ npm run dev
 
 ## 🧠 How the ML Pipeline Works
 
-1. **Feature Extraction:** Audio is converted to `.wav` and processed by `librosa`. We extract ~18 features: 13 MFCCs, pitch metrics, energy metrics, zero-crossing rate, speech rate, and pause durations.
+1. **Feature Extraction:** Audio is converted to `.wav` and processed by `librosa`. We extract 24 features: 13 MFCCs, pitch metrics, energy metrics, zero-crossing rate, spectral centroid, speech rate, and pause patterns.
 2. **Baseline Comparison:** The extracted feature vector is compared against a pre-computed baseline profile (`baseline.pkl`) of normal speech.
 3. **Anomaly Detection:** We calculate the z-score for each feature. If features deviate heavily from the baseline, it flags an anomaly.
 4. **Clinical Interpretation:** Technical feature names (e.g., "high pitch_std") are mapped to human-readable insights (e.g., "voice instability or tremor") via a rule-based engine.
@@ -77,6 +95,10 @@ npm run dev
 - Authentication is handled exclusively through Supabase Google SSO.
 - The backend features custom JWT decoding using the ES256 algorithm to secure protected routes and ensure users can only access their own data.
 - Audio files are stored securely in robust Supabase storage policies.
+
+## 📄 License
+
+This project is open source and available under the [MIT License](LICENSE).
 
 ---
 *Built for the ByteConqueror Hackathon by Atharva Kadam.*

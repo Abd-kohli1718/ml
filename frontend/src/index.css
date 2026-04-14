@@ -5,6 +5,78 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,800;1,400&family=Inter:wght@300;400;500;600;700&display=swap');
 
+/* ---- CSS CUSTOM PROPERTIES (Light = default) ---- */
+:root {
+  --bg-body: #e8e0d0;
+  --text-primary: #2d3436;
+  --text-secondary: #555;
+  --text-muted: #888;
+  --text-faint: #aaa;
+  --accent: #6bb9b0;
+  --card-bg: rgba(255, 255, 255, 0.82);
+  --card-border: rgba(255, 255, 255, 0.6);
+  --card-shadow: 0 8px 32px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04);
+  --input-bg: #fff;
+  --input-border: #ddd8d0;
+  --btn-google-bg: rgba(255, 255, 255, 0.8);
+  --btn-google-border: #ddd8d0;
+  --btn-google-color: #444;
+  --divider-color: #d5d0c8;
+  --checkbox-border: #c5c0b8;
+  --checkbox-checked: #2d3436;
+  --selection-bg: rgba(107, 185, 176, 0.3);
+
+  /* Dashboard / Notebook */
+  --dash-bg: #322b25;
+  --page-left-start: #4a4038;
+  --page-left-end: #252018;
+  --page-center-start: #f2eddf;
+  --page-center-end: #e5ded0;
+  --page-right-start: #faf7f0;
+  --page-right-end: #f0ebdf;
+
+  /* Records / History / Analytics */
+  --page-bg: linear-gradient(170deg, #faf7f0 0%, #f3efe5 50%, #ece6d8 100%);
+  --card-surface: rgba(255, 255, 255, 0.7);
+  --border-subtle: rgba(0, 0, 0, 0.06);
+}
+
+/* ---- DARK MODE ---- */
+[data-theme="dark"] {
+  --bg-body: #1a1a2e;
+  --text-primary: #e0e0e0;
+  --text-secondary: #b0b0b0;
+  --text-muted: #808080;
+  --text-faint: #606060;
+  --accent: #6bb9b0;
+  --card-bg: rgba(30, 30, 50, 0.85);
+  --card-border: rgba(255, 255, 255, 0.08);
+  --card-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2);
+  --input-bg: rgba(255, 255, 255, 0.06);
+  --input-border: rgba(255, 255, 255, 0.12);
+  --btn-google-bg: rgba(255, 255, 255, 0.06);
+  --btn-google-border: rgba(255, 255, 255, 0.12);
+  --btn-google-color: #ccc;
+  --divider-color: rgba(255, 255, 255, 0.1);
+  --checkbox-border: rgba(255, 255, 255, 0.2);
+  --checkbox-checked: #6bb9b0;
+  --selection-bg: rgba(107, 185, 176, 0.3);
+
+  /* Dashboard / Notebook */
+  --dash-bg: #0f0f1a;
+  --page-left-start: #1a1a2e;
+  --page-left-end: #0a0a14;
+  --page-center-start: #1e1e32;
+  --page-center-end: #16162a;
+  --page-right-start: #22223a;
+  --page-right-end: #1a1a2e;
+
+  /* Records / History / Analytics */
+  --page-bg: linear-gradient(170deg, #1a1a2e 0%, #16162a 50%, #121222 100%);
+  --card-surface: rgba(30, 30, 50, 0.7);
+  --border-subtle: rgba(255, 255, 255, 0.06);
+}
+
 *,
 *::before,
 *::after {
@@ -23,10 +95,11 @@ html {
 body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   line-height: 1.6;
-  color: #2d3436;
-  background: #e8e0d0;
+  color: var(--text-primary);
+  background: var(--bg-body);
   min-height: 100vh;
   overflow-x: hidden;
+  transition: background 0.3s ease, color 0.3s ease;
 }
 
 #root {
@@ -56,6 +129,45 @@ img {
 }
 
 ::selection {
-  background: rgba(107, 185, 176, 0.3);
-  color: #1a1a1a;
+  background: var(--selection-bg);
+  color: var(--text-primary);
+}
+
+/* ---- DARK MODE THEME TOGGLE BUTTON ---- */
+.theme-toggle {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 9999;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: var(--card-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--card-border);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: var(--text-secondary);
+  font-size: 18px;
+  padding: 0;
+}
+
+.theme-toggle:hover {
+  transform: scale(1.1) rotate(15deg);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.18);
+}
+
+.theme-toggle svg {
+  width: 20px;
+  height: 20px;
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.theme-toggle:hover svg {
+  transform: rotate(30deg);
 }

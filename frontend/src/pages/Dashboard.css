@@ -11,7 +11,8 @@
   justify-content: center;
   position: relative;
   overflow: hidden;
-  background: #322b25;
+  background: var(--dash-bg);
+  transition: background 0.3s ease;
 }
 
 /* Desk grain texture (hidden in full-page mode) */
@@ -157,13 +158,14 @@
   flex: 0 0 260px;
   background: linear-gradient(
     165deg,
-    #4a4038 0%,
-    #3a332c 20%,
-    #322b25 50%,
-    #2a2520 80%,
-    #252018 100%
+    var(--page-left-start) 0%,
+    color-mix(in srgb, var(--page-left-start), var(--page-left-end) 40%) 20%,
+    color-mix(in srgb, var(--page-left-start), var(--page-left-end) 60%) 50%,
+    color-mix(in srgb, var(--page-left-start), var(--page-left-end) 80%) 80%,
+    var(--page-left-end) 100%
   );
   position: relative;
+  transition: background 0.3s ease;
 }
 
 /* Paper texture on dark page */
@@ -312,13 +314,14 @@
   flex: 0 0 240px;
   background: linear-gradient(
     175deg,
-    #f2eddf 0%,
-    #ede7d8 30%,
-    #e8e1d2 60%,
-    #e5ded0 100%
+    var(--page-center-start) 0%,
+    color-mix(in srgb, var(--page-center-start), var(--page-center-end) 50%) 30%,
+    color-mix(in srgb, var(--page-center-start), var(--page-center-end) 70%) 60%,
+    var(--page-center-end) 100%
   );
   position: relative;
-  border-right: 1px solid rgba(0, 0, 0, 0.05);
+  border-right: 1px solid var(--border-subtle);
+  transition: background 0.3s ease;
 }
 
 /* Paper lines */
@@ -353,12 +356,13 @@
   flex: 1;
   background: linear-gradient(
     170deg,
-    #faf7f0 0%,
-    #f7f3eb 20%,
-    #f3efe5 50%,
-    #f0ebdf 100%
+    var(--page-right-start) 0%,
+    color-mix(in srgb, var(--page-right-start), var(--page-right-end) 30%) 20%,
+    color-mix(in srgb, var(--page-right-start), var(--page-right-end) 60%) 50%,
+    var(--page-right-end) 100%
   );
   position: relative;
+  transition: background 0.3s ease;
 }
 
 /* Paper lines */

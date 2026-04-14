@@ -399,3 +399,11 @@
     flex-direction: column;
   }
 }
+
+/* ---- DARK MODE MOBILE OVERRIDES ---- */
+@media (max-width: 768px) {
+  [data-theme="dark"] .mobile-nav {
+    background: linear-gradient(180deg, #1a1a2e, #121222);
+    border-top-color: rgba(255,255,255,0.04);
+  }
+}

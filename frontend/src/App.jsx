@@ -2,6 +2,8 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { useEffect } from 'react'
 import { TransitionProvider } from './components/PageTransition'
 import { AuthProvider, useAuth } from './context/AuthContext'
+import { ThemeProvider } from './context/ThemeContext'
+import ThemeToggle from './components/ThemeToggle'
 import MobileNav from './components/MobileNav'
 import Login from './pages/Login'
 import Signup from './pages/Signup'
@@ -59,6 +61,7 @@ function AppRoutes() {
 
   return (
     <>
+      <ThemeToggle />
       <Routes>
         <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
@@ -77,14 +80,16 @@ function AppRoutes() {
 
 function App() {
   return (
-    <AuthProvider>
-      <Router>
-        {/* TransitionProvider wraps all routes — enables cinematic transitions app-wide */}
-        <TransitionProvider>
-          <AppRoutes />
-        </TransitionProvider>
-      </Router>
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <Router>
+          {/* TransitionProvider wraps all routes — enables cinematic transitions app-wide */}
+          <TransitionProvider>
+            <AppRoutes />
+          </TransitionProvider>
+        </Router>
+      </AuthProvider>
+    </ThemeProvider>
   )
 }
 

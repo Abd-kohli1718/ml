@@ -115,10 +115,6 @@ function Login() {
         <p className="switch-text fade-in-up">
           Don't have an account? <Link to="/signup" className="auth-link">Sign up</Link>
         </p>
-
-        <p className="switch-text fade-in-up" style={{ marginTop: '16px', fontSize: '13px', color: '#8a7e6b' }}>
-          📱 <strong>Our App is downloadable!</strong> Install it from your browser menu for a seamless experience.
-        </p>
       </div>
     </AuthLayout>
   )

@@ -15,7 +15,7 @@
   font-family: 'Playfair Display', Georgia, serif;
   font-size: 2.2rem;
   font-weight: 700;
-  color: #1a1a1a;
+  color: var(--text-primary);
   margin: 0 0 8px 0;
   letter-spacing: -0.5px;
   line-height: 1.2;
@@ -25,7 +25,7 @@
   font-family: 'Inter', sans-serif;
   font-size: 1rem;
   font-weight: 400;
-  color: #555;
+  color: var(--text-secondary);
   margin: 0 0 6px 0;
   line-height: 1.5;
 }
@@ -34,7 +34,7 @@
   font-family: 'Inter', sans-serif;
   font-size: 0.82rem;
   font-weight: 400;
-  color: #888;
+  color: var(--text-muted);
   margin: 0 0 28px 0;
   line-height: 1.6;
   max-width: 340px;
@@ -50,7 +50,7 @@
   margin-bottom: 18px;
   border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  box-shadow: var(--card-shadow);
 }
 
 /* ---- CHECKBOX ---- */
@@ -81,9 +81,9 @@
 .checkbox-box {
   width: 20px;
   height: 20px;
-  border: 2px solid #c5c0b8;
+  border: 2px solid var(--checkbox-border);
   border-radius: 5px;
-  background: rgba(255, 255, 255, 0.8);
+  background: var(--input-bg);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -96,8 +96,8 @@
 }
 
 .checkbox-wrapper input:checked ~ .checkbox-box {
-  background: #2d3436;
-  border-color: #2d3436;
+  background: var(--checkbox-checked);
+  border-color: var(--checkbox-checked);
 }
 
 .checkbox-wrapper input:checked ~ .checkbox-box::after {
@@ -113,7 +113,7 @@
 .checkbox-text {
   font-family: 'Inter', sans-serif;
   font-size: 0.88rem;
-  color: #555;
+  color: var(--text-secondary);
   font-weight: 400;
 }
 
@@ -170,7 +170,7 @@
 .auth-link {
   font-family: 'Inter', sans-serif;
   font-size: 0.88rem;
-  color: #555;
+  color: var(--text-secondary);
   text-decoration: none;
   font-weight: 500;
   transition: all 0.2s ease;
@@ -190,12 +190,12 @@
 .switch-text {
   font-family: 'Inter', sans-serif;
   font-size: 0.88rem;
-  color: #888;
+  color: var(--text-muted);
   margin: 12px 0;
 }
 
 .switch-text .auth-link {
-  color: #2d3436;
+  color: var(--text-primary);
   font-weight: 600;
 }
 
@@ -215,13 +215,13 @@
 .divider-line {
   flex: 1;
   height: 1px;
-  background: linear-gradient(90deg, transparent, #d5d0c8, transparent);
+  background: linear-gradient(90deg, transparent, var(--divider-color), transparent);
 }
 
 .divider-text {
   font-family: 'Inter', sans-serif;
   font-size: 0.78rem;
-  color: #aaa;
+  color: var(--text-faint);
   font-weight: 500;
   letter-spacing: 0.5px;
   text-transform: uppercase;
@@ -238,9 +238,9 @@
   font-family: 'Inter', sans-serif;
   font-size: 0.9rem;
   font-weight: 500;
-  color: #444;
-  background: rgba(255, 255, 255, 0.8);
-  border: 1.5px solid #ddd8d0;
+  color: var(--btn-google-color);
+  background: var(--btn-google-bg);
+  border: 1.5px solid var(--btn-google-border);
   border-radius: 12px;
   cursor: pointer;
   transition: all 0.25s ease;

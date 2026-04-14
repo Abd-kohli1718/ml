@@ -18,9 +18,9 @@
   font-family: 'Inter', sans-serif;
   font-size: 0.95rem;
   font-weight: 400;
-  color: #2d3436;
-  background: rgba(255, 255, 255, 0.7);
-  border: 1px solid #d5d0c8;
+  color: var(--text-primary);
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
   border-radius: 0;
   transition: all 0.25s ease;
   position: relative;
@@ -62,7 +62,7 @@
   font-family: 'Inter', sans-serif;
   font-size: 0.95rem;
   font-weight: 400;
-  color: #999;
+  color: var(--text-muted);
   pointer-events: none;
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   z-index: 3;

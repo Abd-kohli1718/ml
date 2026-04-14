@@ -612,3 +612,21 @@
     background: rgba(0, 0, 0, 0.3);
   }
 }
+
+/* ---- DARK MODE OVERRIDES ---- */
+[data-theme="dark"] .calendar-title { color: #e0e0e0; }
+[data-theme="dark"] .calendar-subtitle { color: rgba(200,200,220,0.45); }
+[data-theme="dark"] .month-label { color: #e0e0e0; }
+[data-theme="dark"] .month-nav-btn { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.08); color: rgba(200,200,220,0.5); }
+[data-theme="dark"] .legend-tag { color: rgba(200,200,220,0.55); }
+[data-theme="dark"] .calendar-grid-wrapper { background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.06); }
+[data-theme="dark"] .weekday-label { color: rgba(200,200,220,0.4); }
+[data-theme="dark"] .day-card { background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.06); }
+[data-theme="dark"] .day-card:hover { background: rgba(255,255,255,0.08); }
+[data-theme="dark"] .day-number { color: #d0d0d0; }
+[data-theme="dark"] .day-card.empty .day-number { color: rgba(200,200,220,0.2); }
+[data-theme="dark"] .day-detail-popup { background: #1e1e32; border-color: rgba(255,255,255,0.1); }
+[data-theme="dark"] .popup-date { color: #e0e0e0; }
+[data-theme="dark"] .popup-detail-label { color: rgba(200,200,220,0.5); }
+[data-theme="dark"] .popup-detail-value { color: #e0e0e0; }
+[data-theme="dark"] .calendar-footer-note { color: rgba(200,200,220,0.35); }
