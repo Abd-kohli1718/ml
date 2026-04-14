@@ -174,7 +174,11 @@ function Record() {
 
   // ─── RESULT VIEW ─────────────────────────────────────────
   if (showResult && result) {
-    const scoreColor = result.health_score >= 80 ? '#4CAF50' : result.health_score >= 65 ? '#FF9800' : '#f44336'
+    const score = result.health_score
+    const scoreColor = score >= 80 ? '#4CAF50' : score >= 65 ? '#FF9800' : '#f44336'
+    const emoji = score >= 80 ? '😊' : score >= 65 ? '😐' : '😟'
+    const feeling = score >= 80 ? 'Your voice sounds healthy!' : score >= 65 ? 'Some small changes noticed' : 'Please see a doctor soon'
+
     return (
       <div className="record-page result-page">
         <div className="notebook-rings" aria-hidden="true">
@@ -182,30 +186,34 @@ function Record() {
         </div>
 
         <div className="result-container">
-          <h2 className="result-heading">Voice Analysis Complete</h2>
+          {/* Big emoji */}
+          <div className="result-emoji">{emoji}</div>
+
+          {/* Simple heading */}
+          <h2 className="result-heading">{feeling}</h2>
 
           {/* Score Circle */}
           <div className="result-score-circle" style={{ borderColor: scoreColor }}>
-            <span className="result-score-num" style={{ color: scoreColor }}>{result.health_score}</span>
-            <span className="result-score-label">/ 100</span>
+            <span className="result-score-num" style={{ color: scoreColor }}>{score}</span>
+            <span className="result-score-label">out of 100</span>
           </div>
 
           {/* Status Badge */}
           <div className="result-status" style={{ background: scoreColor + '22', color: scoreColor }}>
-            {result.status}
+            {result.status === 'Stable' ? '✅ Voice is Stable' : result.status === 'Slight Change' ? '⚠️ Slight Changes Found' : '🔴 Needs Attention'}
           </div>
 
-          {/* Summary */}
+          {/* Summary - plain language */}
           <p className="result-summary">{result.summary}</p>
 
-          {/* Observations */}
+          {/* What we found — simple list */}
           {result.observations && result.observations.length > 0 && (
             <div className="result-section">
-              <h3 className="result-section-title">Observations</h3>
+              <h3 className="result-section-title">What we found:</h3>
               <ul className="result-observations">
                 {result.observations.map((obs, i) => (
                   <li key={i} className="result-obs-item">
-                    <span className="obs-bullet">•</span>
+                    <span className="obs-bullet">{i === 0 ? '👉' : '•'}</span>
                     {obs}
                   </li>
                 ))}
@@ -213,41 +221,18 @@ function Record() {
             </div>
           )}
 
-          {/* Feature Deviations */}
-          {result.explanation && result.explanation.length > 0 && (
-            <div className="result-section">
-              <h3 className="result-section-title">Feature Analysis</h3>
-              <div className="result-features">
-                {result.explanation.map((feat, i) => {
-                  const absZ = Math.abs(feat.z_score)
-                  const barWidth = Math.min(absZ / 3 * 100, 100)
-                  const barColor = absZ < 1 ? '#4CAF50' : absZ < 1.5 ? '#FF9800' : '#f44336'
-                  return (
-                    <div key={i} className="feature-row">
-                      <span className="feature-name">{feat.name}</span>
-                      <div className="feature-bar-bg">
-                        <div className="feature-bar" style={{ width: `${barWidth}%`, background: barColor }}></div>
-                      </div>
-                      <span className="feature-zscore" style={{ color: barColor }}>{feat.z_score.toFixed(2)}</span>
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
-          )}
-
           {/* Medical Note */}
           {result.medical_note && (
-            <p className="result-medical-note">⚕ {result.medical_note}</p>
+            <p className="result-medical-note">🩺 {result.medical_note}</p>
           )}
 
           {/* Action Buttons */}
           <div className="result-actions">
             <button className="result-btn primary" onClick={() => navigateWithTransition('/history')} id="btn-view-history">
-              View History
+              📋 View History
             </button>
             <button className="result-btn secondary" onClick={() => { setShowResult(false); setResult(null) }} id="btn-record-again">
-              Record Again
+              🎤 Record Again
             </button>
           </div>
         </div>
