@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
+import { useEffect } from 'react'
 import { TransitionProvider } from './components/PageTransition'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import MobileNav from './components/MobileNav'
@@ -10,6 +11,8 @@ import Analytics from './pages/Analytics'
 import Calendar from './pages/Calendar'
 import History from './pages/History'
 import './styles/mobile.css'
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
 
 // Protected route wrapper — redirects to login if not authenticated
 function ProtectedRoute({ children }) {
@@ -44,6 +47,15 @@ function PublicRoute({ children }) {
 // Inner app — renders routes + mobile nav (needs to be inside Router for useLocation)
 function AppRoutes() {
   const { user } = useAuth()
+
+  // Keep-alive ping — prevents Render free tier from sleeping (every 13 min)
+  useEffect(() => {
+    if (!user) return
+    const ping = () => fetch(`${API_URL}/health`).catch(() => {})
+    ping() // immediate first ping on login
+    const id = setInterval(ping, 13 * 60 * 1000)
+    return () => clearInterval(id)
+  }, [user])
 
   return (
     <>

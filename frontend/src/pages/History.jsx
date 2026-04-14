@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useSearchParams, useLocation } from 'react-router-dom'
 import { useTransition } from '../components/PageTransition'
 import Sidebar from '../components/Sidebar'
@@ -29,6 +29,30 @@ const generateWaveform = (score) => {
 // ---- Voice Entry Card Component ----
 function VoiceCard({ entry, index, isHighlighted }) {
   const category = getScoreCategory(entry.score)
+  const [isPlaying, setIsPlaying] = useState(false)
+  const audioRef = useRef(null)
+
+  const toggleAudio = () => {
+    if (!entry.audio_url) return
+    if (!audioRef.current) {
+      audioRef.current = new Audio(entry.audio_url)
+      audioRef.current.onended = () => setIsPlaying(false)
+    }
+    if (isPlaying) {
+      audioRef.current.pause()
+      setIsPlaying(false)
+    } else {
+      audioRef.current.play().catch(() => {})
+      setIsPlaying(true)
+    }
+  }
+
+  // Cleanup audio on unmount
+  useEffect(() => {
+    return () => {
+      if (audioRef.current) { audioRef.current.pause(); audioRef.current = null }
+    }
+  }, [])
 
   return (
     <div
@@ -36,7 +60,7 @@ function VoiceCard({ entry, index, isHighlighted }) {
       style={{ animationDelay: `${index * 80}ms` }}
       id={`voice-card-${entry.id}`}
     >
-      {/* Top: Date + Status + Add button */}
+      {/* Top: Date + Status + Play button */}
       <div className="card-top">
         <div>
           <div className="card-date">{entry.date}</div>
@@ -45,12 +69,22 @@ function VoiceCard({ entry, index, isHighlighted }) {
             {entry.statusLabel}
           </div>
         </div>
-        <button className="card-add-btn" aria-label="More options">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-            <line x1="12" y1="5" x2="12" y2="19" />
-            <line x1="5" y1="12" x2="19" y2="12" />
-          </svg>
-        </button>
+        {entry.audio_url ? (
+          <button className={`card-play-btn ${isPlaying ? 'playing' : ''}`} onClick={toggleAudio} aria-label={isPlaying ? 'Pause' : 'Play recording'}>
+            {isPlaying ? (
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>
+            ) : (
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            )}
+          </button>
+        ) : (
+          <button className="card-add-btn" aria-label="More options">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <line x1="12" y1="5" x2="12" y2="19" />
+              <line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
+          </button>
+        )}
       </div>
 
       {/* Middle: Title + Score */}
@@ -131,6 +165,7 @@ function History() {
               waveform: generateWaveform(r.health_score || 50),
               duration: '--',
               pitch: '--',
+              audio_url: r.audio_url || null,
             }
           })
           setRecords(transformed)
