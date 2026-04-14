@@ -125,35 +125,6 @@ function Record() {
     }
   }, [])
 
-  // Stop recording
-  const stopRecording = useCallback(() => {
-    return new Promise((resolve) => {
-      if (!isRecordingRef.current || isStoppingRef.current) {
-        resolve()
-        return
-      }
-      isStoppingRef.current = true
-      isRecordingRef.current = false
-      setIsRecording(false)
-      clearInterval(intervalRef.current)
-      clearInterval(waveIntervalRef.current)
-      setWaveData(Array(40).fill(0.3))
-
-      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-        mediaRecorderRef.current.onstop = () => {
-          isStoppingRef.current = false
-          resolve()
-        }
-        mediaRecorderRef.current.stop()
-      } else {
-        isStoppingRef.current = false
-        resolve()
-      }
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach(track => track.stop())
-      }
-    })
-  }, [])
 
   // Toggle recording
   const toggleRecording = useCallback(() => {
