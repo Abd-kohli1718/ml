@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useSearchParams, useLocation } from 'react-router-dom'
 import { useTransition } from '../components/PageTransition'
 import Sidebar from '../components/Sidebar'
 import HowItWorks from '../components/HowItWorks'
@@ -99,6 +99,7 @@ function History() {
   const [animateIn, setAnimateIn] = useState(false)
   const { navigateWithTransition } = useTransition()
   const [searchParams, setSearchParams] = useSearchParams()
+  const location = useLocation()
   const highlightDate = searchParams.get('date') || null
 
   // Real data only — no dummy data
@@ -109,7 +110,7 @@ function History() {
     requestAnimationFrame(() => setAnimateIn(true))
   }, [])
 
-  // Fetch real records from API
+  // Fetch real records from API — refetch on every navigation (location.key changes)
   useEffect(() => {
     async function loadRecords() {
       setIsLoading(true)
@@ -133,6 +134,8 @@ function History() {
             }
           })
           setRecords(transformed)
+        } else {
+          setRecords([])
         }
       } catch (err) {
         console.error('Failed to load history:', err.message)
@@ -141,7 +144,7 @@ function History() {
       }
     }
     loadRecords()
-  }, [])
+  }, [location.key])
 
   // Auto-scroll to highlighted card
   useEffect(() => {
