@@ -42,30 +42,40 @@ function Record() {
 
   // Stop recording
   const stopRecording = useCallback(() => {
-    if (!isRecordingRef.current) return
-    isRecordingRef.current = false
-    setIsRecording(false)
-    clearInterval(intervalRef.current)
-    clearInterval(waveIntervalRef.current)
-    setWaveData(Array(40).fill(0.3))
+    return new Promise((resolve) => {
+      if (!isRecordingRef.current) {
+        resolve()
+        return
+      }
+      isRecordingRef.current = false
+      setIsRecording(false)
+      clearInterval(intervalRef.current)
+      clearInterval(waveIntervalRef.current)
+      setWaveData(Array(40).fill(0.3))
 
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-      mediaRecorderRef.current.stop()
-    }
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop())
-    }
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+        mediaRecorderRef.current.onstop = () => resolve()
+        mediaRecorderRef.current.stop()
+      } else {
+        resolve()
+      }
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop())
+      }
+    })
   }, [])
+
+  const isStoppingRef = useRef(false)
 
   // Start recording — real mic capture
   const startRecording = useCallback(async () => {
-    if (isRecordingRef.current) return
+    if (isRecordingRef.current || isStoppingRef.current) return
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
       streamRef.current = stream
 
       // Set up analyser for real waveform
-      const audioContext = new AudioContext()
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)()
       const source = audioContext.createMediaStreamSource(stream)
       const analyser = audioContext.createAnalyser()
       analyser.fftSize = 64
@@ -73,9 +83,8 @@ function Record() {
       analyserRef.current = analyser
 
       // Set up MediaRecorder
-      const mediaRecorder = new MediaRecorder(stream, {
-        mimeType: MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : 'audio/mp4',
-      })
+      const mimeType = MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : 'audio/mp4'
+      const mediaRecorder = new MediaRecorder(stream, { mimeType })
       audioChunksRef.current = []
 
       mediaRecorder.ondataavailable = (event) => {
@@ -116,8 +125,39 @@ function Record() {
     }
   }, [])
 
+  // Stop recording
+  const stopRecording = useCallback(() => {
+    return new Promise((resolve) => {
+      if (!isRecordingRef.current || isStoppingRef.current) {
+        resolve()
+        return
+      }
+      isStoppingRef.current = true
+      isRecordingRef.current = false
+      setIsRecording(false)
+      clearInterval(intervalRef.current)
+      clearInterval(waveIntervalRef.current)
+      setWaveData(Array(40).fill(0.3))
+
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+        mediaRecorderRef.current.onstop = () => {
+          isStoppingRef.current = false
+          resolve()
+        }
+        mediaRecorderRef.current.stop()
+      } else {
+        isStoppingRef.current = false
+        resolve()
+      }
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop())
+      }
+    })
+  }, [])
+
   // Toggle recording
   const toggleRecording = useCallback(() => {
+    if (isStoppingRef.current) return // Prevent rapid clicks
     if (isRecordingRef.current) {
       stopRecording()
     } else {
@@ -139,34 +179,47 @@ function Record() {
   }, [startRecording])
 
   // Cancel → go back to dashboard
-  const handleCancel = () => {
-    stopRecording()
+  const handleCancel = async () => {
+    await stopRecording()
     navigateWithTransition('/dashboard')
   }
 
   // Upload → stop, send to API, and show result
   const handleUpload = async () => {
-    stopRecording()
-
-    // Wait a beat for the MediaRecorder to flush
-    await new Promise(resolve => setTimeout(resolve, 300))
+    setIsUploading(true)
+    await stopRecording()
 
     if (audioChunksRef.current.length === 0) {
       alert('No audio recorded. Please try again.')
+      setIsUploading(false)
       return
     }
 
-    setIsUploading(true)
     try {
-      const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' })
-      const analysisResult = await uploadAudio(audioBlob, 'recording.webm')
+      const mimeType = mediaRecorderRef.current ? mediaRecorderRef.current.mimeType : 'audio/webm'
+      const audioBlob = new Blob(audioChunksRef.current, { type: mimeType })
+      
+      let finalBlob = audioBlob
+      let filename = mimeType.includes('mp4') ? 'recording.m4a' : 'recording.webm'
+
+      // Try converting to WAV for backend compatibility
+      try {
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)()
+        const arrayBuffer = await audioBlob.arrayBuffer()
+        const audioBuffer = await audioContext.decodeAudioData(arrayBuffer)
+        finalBlob = audioBufferToWav(audioBuffer)
+        filename = 'recording.wav'
+      } catch (convErr) {
+        console.warn('WAV conversion failed, using original format:', convErr)
+      }
+
+      const analysisResult = await uploadAudio(finalBlob, filename)
       setResult(analysisResult)
       // Navigate to history after a brief moment to see the result
       setTimeout(() => navigateWithTransition('/history'), 3000)
     } catch (err) {
       console.error('Upload failed:', err)
       alert('Analysis failed: ' + err.message)
-    } finally {
       setIsUploading(false)
     }
   }
@@ -295,3 +348,62 @@ function Record() {
 }
 
 export default Record
+
+// --- Helper: Convert AudioBuffer to WAV Blob ---
+function audioBufferToWav(buffer) {
+  const numChannels = buffer.numberOfChannels
+  const sampleRate = buffer.sampleRate
+  const format = 1 // PCM
+  const bitDepth = 16
+  
+  const result = (() => {
+    if (numChannels === 2) {
+      const channelLeft = buffer.getChannelData(0)
+      const channelRight = buffer.getChannelData(1)
+      const length = channelLeft.length + channelRight.length
+      const res = new Float32Array(length)
+      let index = 0
+      let inputIndex = 0
+      while (index < length) {
+        res[index++] = channelLeft[inputIndex]
+        res[index++] = channelRight[inputIndex]
+        inputIndex++
+      }
+      return res
+    } else {
+      return buffer.getChannelData(0)
+    }
+  })()
+
+  const dataLength = result.length * (bitDepth / 8)
+  const bufferArray = new ArrayBuffer(44 + dataLength)
+  const view = new DataView(bufferArray)
+
+  const writeString = (v, offset, string) => {
+    for (let i = 0; i < string.length; i++) {
+      v.setUint8(offset + i, string.charCodeAt(i))
+    }
+  }
+
+  writeString(view, 0, 'RIFF')
+  view.setUint32(4, 36 + dataLength, true)
+  writeString(view, 8, 'WAVE')
+  writeString(view, 12, 'fmt ')
+  view.setUint32(16, 16, true)
+  view.setUint16(20, format, true)
+  view.setUint16(22, numChannels, true)
+  view.setUint32(24, sampleRate, true)
+  view.setUint32(28, sampleRate * numChannels * (bitDepth / 8), true)
+  view.setUint16(32, numChannels * (bitDepth / 8), true)
+  view.setUint16(34, bitDepth, true)
+  writeString(view, 36, 'data')
+  view.setUint32(40, dataLength, true)
+
+  let offset = 44
+  for (let i = 0; i < result.length; i++, offset += 2) {
+    let s = Math.max(-1, Math.min(1, result[i]))
+    view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7FFF, true)
+  }
+
+  return new Blob([view], { type: 'audio/wav' })
+}
