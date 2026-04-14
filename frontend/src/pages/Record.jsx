@@ -137,6 +137,7 @@ function Record() {
   const handleUpload = async () => {
     if (isUploading) return
     setIsUploading(true)
+    clearInterval(intervalRef.current)  // freeze timer
     await stopRecording()
 
     if (audioChunksRef.current.length === 0) {
@@ -273,7 +274,9 @@ function Record() {
       </div>
 
       <p className="record-label">
-        {isUploading ? 'ANALYZING...' : isRecording ? 'RECORDING' : 'RECORD'}
+        {isUploading ? (
+          <span className="analyzing-label"><span className="spinner"></span> ANALYZING</span>
+        ) : isRecording ? 'RECORDING' : 'RECORD'}
       </p>
 
       <div className="action-row">
