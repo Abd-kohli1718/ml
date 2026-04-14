@@ -6,95 +6,105 @@ import './Record.css'
 function Record() {
   const { navigateWithTransition } = useTransition()
   const [isRecording, setIsRecording] = useState(false)
-  const [timer, setTimer] = useState(0) // seconds elapsed
+  const [timer, setTimer] = useState(0)
   const [waveData, setWaveData] = useState(Array(40).fill(0.3))
   const [isUploading, setIsUploading] = useState(false)
   const [result, setResult] = useState(null)
   const intervalRef = useRef(null)
   const waveIntervalRef = useRef(null)
 
-  // Real audio recording refs
+  // Audio refs
   const mediaRecorderRef = useRef(null)
   const audioChunksRef = useRef([])
   const streamRef = useRef(null)
   const analyserRef = useRef(null)
-  const isRecordingRef = useRef(false)
+  const audioContextRef = useRef(null)
 
-  // Format time as M:SS
+  // State lock refs — prevents race conditions
+  const isRecordingRef = useRef(false)
+  const isBusyRef = useRef(false) // blocks all mic actions while starting/stopping
+
   const formatTime = (secs) => {
     const m = Math.floor(secs / 60)
     const s = secs % 60
     return `${m}:${s.toString().padStart(2, '0')}`
   }
 
-  // Current date/time
   const now = new Date()
-  const dateStr = now.toLocaleDateString('en-US', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  })
-  const timeStr = now.toLocaleTimeString('en-US', {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: true,
-  })
+  const dateStr = now.toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' })
+  const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })
 
-  // Stop recording
+  // ─── STOP ────────────────────────────────────────────────
   const stopRecording = useCallback(() => {
     return new Promise((resolve) => {
-      if (!isRecordingRef.current) {
-        resolve()
-        return
-      }
+      // Already stopped or busy? resolve immediately
+      if (!isRecordingRef.current) { resolve(); return }
+
+      isBusyRef.current = true
       isRecordingRef.current = false
       setIsRecording(false)
+
+      // Kill timers
       clearInterval(intervalRef.current)
       clearInterval(waveIntervalRef.current)
       setWaveData(Array(40).fill(0.3))
 
-      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-        mediaRecorderRef.current.onstop = () => resolve()
-        mediaRecorderRef.current.stop()
+      // Stop MediaRecorder and wait for onstop
+      const mr = mediaRecorderRef.current
+      if (mr && mr.state !== 'inactive') {
+        mr.onstop = () => {
+          isBusyRef.current = false
+          resolve()
+        }
+        mr.stop()
       } else {
+        isBusyRef.current = false
         resolve()
       }
+
+      // Kill mic stream
       if (streamRef.current) {
-        streamRef.current.getTracks().forEach(track => track.stop())
+        streamRef.current.getTracks().forEach(t => t.stop())
+        streamRef.current = null
+      }
+
+      // Close audio context
+      if (audioContextRef.current) {
+        audioContextRef.current.close().catch(() => {})
+        audioContextRef.current = null
       }
     })
   }, [])
 
-  const isStoppingRef = useRef(false)
-
-  // Start recording — real mic capture
+  // ─── START ───────────────────────────────────────────────
   const startRecording = useCallback(async () => {
-    if (isRecordingRef.current || isStoppingRef.current) return
+    if (isRecordingRef.current || isBusyRef.current) return
+
+    isBusyRef.current = true
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
       streamRef.current = stream
 
-      // Set up analyser for real waveform
-      const audioContext = new (window.AudioContext || window.webkitAudioContext)()
-      const source = audioContext.createMediaStreamSource(stream)
-      const analyser = audioContext.createAnalyser()
+      // Analyser for waveform
+      const ctx = new (window.AudioContext || window.webkitAudioContext)()
+      audioContextRef.current = ctx
+      const source = ctx.createMediaStreamSource(stream)
+      const analyser = ctx.createAnalyser()
       analyser.fftSize = 64
       source.connect(analyser)
       analyserRef.current = analyser
 
-      // Set up MediaRecorder
+      // MediaRecorder
       const mimeType = MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : 'audio/mp4'
-      const mediaRecorder = new MediaRecorder(stream, { mimeType })
+      const mr = new MediaRecorder(stream, { mimeType })
       audioChunksRef.current = []
 
-      mediaRecorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          audioChunksRef.current.push(event.data)
-        }
+      mr.ondataavailable = (e) => {
+        if (e.data.size > 0) audioChunksRef.current.push(e.data)
       }
 
-      mediaRecorderRef.current = mediaRecorder
-      mediaRecorder.start(100) // collect data every 100ms
+      mediaRecorderRef.current = mr
+      mr.start(100)
 
       isRecordingRef.current = true
       setIsRecording(true)
@@ -102,33 +112,31 @@ function Record() {
       setResult(null)
 
       // Timer
-      intervalRef.current = setInterval(() => {
-        setTimer(prev => prev + 1)
-      }, 1000)
+      intervalRef.current = setInterval(() => setTimer(p => p + 1), 1000)
 
-      // Animate waveform from real audio data
+      // Waveform animation
       waveIntervalRef.current = setInterval(() => {
-        if (analyserRef.current) {
-          const dataArray = new Uint8Array(analyserRef.current.frequencyBinCount)
-          analyserRef.current.getByteFrequencyData(dataArray)
-          const bars = Array(40).fill(0).map((_, i) => {
-            const idx = Math.floor((i / 40) * dataArray.length)
-            return Math.max(0.05, dataArray[idx] / 255)
-          })
-          setWaveData(bars)
-        }
+        if (!analyserRef.current) return
+        const arr = new Uint8Array(analyserRef.current.frequencyBinCount)
+        analyserRef.current.getByteFrequencyData(arr)
+        const bars = Array(40).fill(0).map((_, i) => {
+          const idx = Math.floor((i / 40) * arr.length)
+          return Math.max(0.05, arr[idx] / 255)
+        })
+        setWaveData(bars)
       }, 120)
 
     } catch (err) {
       console.error('Microphone access denied:', err)
       alert('Please allow microphone access to record your voice.')
+    } finally {
+      isBusyRef.current = false
     }
   }, [])
 
-
-  // Toggle recording
+  // ─── TOGGLE ──────────────────────────────────────────────
   const toggleRecording = useCallback(() => {
-    if (isStoppingRef.current) return // Prevent rapid clicks
+    if (isBusyRef.current) return
     if (isRecordingRef.current) {
       stopRecording()
     } else {
@@ -136,28 +144,31 @@ function Record() {
     }
   }, [startRecording, stopRecording])
 
-  // Auto-start recording on mount
+  // Auto-start on mount
   useEffect(() => {
-    const timeout = setTimeout(() => startRecording(), 600)
+    const t = setTimeout(() => startRecording(), 600)
     return () => {
-      clearTimeout(timeout)
+      clearTimeout(t)
       clearInterval(intervalRef.current)
       clearInterval(waveIntervalRef.current)
       if (streamRef.current) {
-        streamRef.current.getTracks().forEach(track => track.stop())
+        streamRef.current.getTracks().forEach(tr => tr.stop())
       }
     }
   }, [startRecording])
 
-  // Cancel → go back to dashboard
+  // Cancel → dashboard
   const handleCancel = async () => {
     await stopRecording()
     navigateWithTransition('/dashboard')
   }
 
-  // Upload → stop, send to API, and show result
+  // Upload → stop, convert, send
   const handleUpload = async () => {
+    if (isUploading) return
     setIsUploading(true)
+
+    // Force-stop recording first and wait for it
     await stopRecording()
 
     if (audioChunksRef.current.length === 0) {
@@ -167,30 +178,30 @@ function Record() {
     }
 
     try {
-      const mimeType = mediaRecorderRef.current ? mediaRecorderRef.current.mimeType : 'audio/webm'
-      const audioBlob = new Blob(audioChunksRef.current, { type: mimeType })
-      
-      let finalBlob = audioBlob
-      let filename = mimeType.includes('mp4') ? 'recording.m4a' : 'recording.webm'
+      const mime = mediaRecorderRef.current?.mimeType || 'audio/webm'
+      const audioBlob = new Blob(audioChunksRef.current, { type: mime })
 
-      // Try converting to WAV for backend compatibility
+      let finalBlob = audioBlob
+      let filename = mime.includes('mp4') ? 'recording.m4a' : 'recording.webm'
+
+      // Try WAV conversion
       try {
-        const audioContext = new (window.AudioContext || window.webkitAudioContext)()
-        const arrayBuffer = await audioBlob.arrayBuffer()
-        const audioBuffer = await audioContext.decodeAudioData(arrayBuffer)
-        finalBlob = audioBufferToWav(audioBuffer)
+        const ctx = new (window.AudioContext || window.webkitAudioContext)()
+        const buf = await ctx.decodeAudioData(await audioBlob.arrayBuffer())
+        finalBlob = audioBufferToWav(buf)
         filename = 'recording.wav'
-      } catch (convErr) {
-        console.warn('WAV conversion failed, using original format:', convErr)
+        ctx.close()
+      } catch (e) {
+        console.warn('WAV conversion failed, using raw format:', e)
       }
 
       const analysisResult = await uploadAudio(finalBlob, filename)
       setResult(analysisResult)
-      // Navigate to history after a brief moment to see the result
       setTimeout(() => navigateWithTransition('/history'), 3000)
     } catch (err) {
       console.error('Upload failed:', err)
       alert('Analysis failed: ' + err.message)
+    } finally {
       setIsUploading(false)
     }
   }
@@ -245,7 +256,7 @@ function Record() {
 
       {/* RECORD / UPLOADING / RESULT label */}
       <p className="record-label">
-        {isUploading ? 'ANALYZING...' : result ? `SCORE: ${result.health_score}/100` : 'RECORD'}
+        {isUploading ? 'ANALYZING...' : result ? `SCORE: ${result.health_score}/100` : isRecording ? 'RECORDING' : 'RECORD'}
       </p>
 
       {/* Center action row */}
@@ -262,7 +273,7 @@ function Record() {
           <span className="leather-btn-text">CANCEL</span>
         </button>
 
-        {/* Center mic button */}
+        {/* Center mic button — toggles recording */}
         <div className={`record-mic-wrapper ${isRecording ? 'active' : ''}`}>
           <button
             className="record-mic-btn"
@@ -271,11 +282,19 @@ function Record() {
             aria-label={isRecording ? 'Stop recording' : 'Start recording'}
             disabled={isUploading}
           >
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
-              <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
-              <line x1="12" x2="12" y1="19" y2="22"/>
-            </svg>
+            {isRecording ? (
+              /* Stop icon (square) when recording */
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                <rect x="6" y="6" width="12" height="12" rx="2"/>
+              </svg>
+            ) : (
+              /* Mic icon when stopped */
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
+                <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                <line x1="12" x2="12" y1="19" y2="22"/>
+              </svg>
+            )}
           </button>
           {isRecording && (
             <>
@@ -286,7 +305,7 @@ function Record() {
         </div>
 
         {/* Upload button */}
-        <button className="leather-btn upload-btn" onClick={handleUpload} id="upload-btn" disabled={isUploading}>
+        <button className="leather-btn upload-btn" onClick={handleUpload} id="upload-btn" disabled={isUploading || !isRecording && audioChunksRef.current.length === 0}>
           <span className="leather-btn-icon">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
@@ -329,52 +348,42 @@ function audioBufferToWav(buffer) {
   
   const result = (() => {
     if (numChannels === 2) {
-      const channelLeft = buffer.getChannelData(0)
-      const channelRight = buffer.getChannelData(1)
-      const length = channelLeft.length + channelRight.length
-      const res = new Float32Array(length)
-      let index = 0
-      let inputIndex = 0
-      while (index < length) {
-        res[index++] = channelLeft[inputIndex]
-        res[index++] = channelRight[inputIndex]
-        inputIndex++
-      }
+      const L = buffer.getChannelData(0)
+      const R = buffer.getChannelData(1)
+      const len = L.length + R.length
+      const res = new Float32Array(len)
+      let idx = 0, src = 0
+      while (idx < len) { res[idx++] = L[src]; res[idx++] = R[src]; src++ }
       return res
-    } else {
-      return buffer.getChannelData(0)
     }
+    return buffer.getChannelData(0)
   })()
 
-  const dataLength = result.length * (bitDepth / 8)
-  const bufferArray = new ArrayBuffer(44 + dataLength)
-  const view = new DataView(bufferArray)
+  const dataLen = result.length * (bitDepth / 8)
+  const buf = new ArrayBuffer(44 + dataLen)
+  const v = new DataView(buf)
 
-  const writeString = (v, offset, string) => {
-    for (let i = 0; i < string.length; i++) {
-      v.setUint8(offset + i, string.charCodeAt(i))
-    }
+  const ws = (offset, s) => { for (let i = 0; i < s.length; i++) v.setUint8(offset + i, s.charCodeAt(i)) }
+
+  ws(0, 'RIFF')
+  v.setUint32(4, 36 + dataLen, true)
+  ws(8, 'WAVE')
+  ws(12, 'fmt ')
+  v.setUint32(16, 16, true)
+  v.setUint16(20, format, true)
+  v.setUint16(22, numChannels, true)
+  v.setUint32(24, sampleRate, true)
+  v.setUint32(28, sampleRate * numChannels * (bitDepth / 8), true)
+  v.setUint16(32, numChannels * (bitDepth / 8), true)
+  v.setUint16(34, bitDepth, true)
+  ws(36, 'data')
+  v.setUint32(40, dataLen, true)
+
+  let off = 44
+  for (let i = 0; i < result.length; i++, off += 2) {
+    const s = Math.max(-1, Math.min(1, result[i]))
+    v.setInt16(off, s < 0 ? s * 0x8000 : s * 0x7FFF, true)
   }
 
-  writeString(view, 0, 'RIFF')
-  view.setUint32(4, 36 + dataLength, true)
-  writeString(view, 8, 'WAVE')
-  writeString(view, 12, 'fmt ')
-  view.setUint32(16, 16, true)
-  view.setUint16(20, format, true)
-  view.setUint16(22, numChannels, true)
-  view.setUint32(24, sampleRate, true)
-  view.setUint32(28, sampleRate * numChannels * (bitDepth / 8), true)
-  view.setUint16(32, numChannels * (bitDepth / 8), true)
-  view.setUint16(34, bitDepth, true)
-  writeString(view, 36, 'data')
-  view.setUint32(40, dataLength, true)
-
-  let offset = 44
-  for (let i = 0; i < result.length; i++, offset += 2) {
-    let s = Math.max(-1, Math.min(1, result[i]))
-    view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7FFF, true)
-  }
-
-  return new Blob([view], { type: 'audio/wav' })
+  return new Blob([v], { type: 'audio/wav' })
 }
