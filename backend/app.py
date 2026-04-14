@@ -125,3 +125,27 @@ async def debug_jwt(token: str = None):
             info["decode_error"] = f"{type(e).__name__}: {e}"
 
     return info
+
+
+@app.get("/api/debug/db", tags=["System"])
+async def debug_db():
+    """Debug endpoint — test Supabase DB connection and key type."""
+    info = {
+        "supabase_url_set": bool(os.getenv("SUPABASE_URL")),
+        "anon_key_set": bool(os.getenv("SUPABASE_ANON_KEY")),
+        "service_role_key_set": bool(os.getenv("SUPABASE_SERVICE_ROLE_KEY")),
+        "key_being_used": "service_role" if os.getenv("SUPABASE_SERVICE_ROLE_KEY") else "anon",
+    }
+
+    try:
+        from backend.db.supabase_client import get_supabase
+        client = get_supabase()
+        # Try a simple select
+        result = client.table("voice_records").select("id").limit(1).execute()
+        info["db_query"] = "success"
+        info["record_count_sample"] = len(result.data) if result.data else 0
+    except Exception as e:
+        info["db_query"] = "error"
+        info["db_error"] = str(e)
+
+    return info
