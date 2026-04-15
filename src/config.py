@@ -22,8 +22,8 @@ MODELS_DIR = os.path.join(_PROJECT_ROOT, "models")
 RECORDINGS_DIR = os.path.join(_PROJECT_ROOT, "recordings")
 
 # --- Anomaly Detection Thresholds (calibrated to observed data) ---
-THRESHOLD_LOW = 1.3           # < this  -> Stable
-THRESHOLD_MEDIUM = 1.6        # <= this -> Slight Change
+THRESHOLD_LOW = 1.8           # < this  -> Stable
+THRESHOLD_MEDIUM = 2.5        # <= this -> Slight Change
 # Anything above THRESHOLD_MEDIUM -> High Risk
 
 # --- Interpretation Settings ---

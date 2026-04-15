@@ -28,13 +28,13 @@ def _compute_health_score(deviation_score: float) -> int:
     """
     Convert a deviation score to a 0-100 health score.
 
-    Mapping:
+    Mapping (calibrated to updated thresholds):
         0.0 deviation  ->  100 (perfect)
-        1.3 deviation  ->   70 (threshold for Slight Change)
-        1.6 deviation  ->   50 (threshold for High Risk)
-        3.0+ deviation ->    0 (severe)
+        1.8 deviation  ->   70 (threshold for Slight Change)
+        2.5 deviation  ->   50 (threshold for High Risk)
+        4.0+ deviation ->    0 (severe)
     """
-    score = max(0.0, 100.0 - (deviation_score * 33.3))
+    score = max(0.0, 100.0 - (deviation_score * 25.0))
     return int(min(100, max(0, round(score))))
 
 
@@ -82,7 +82,7 @@ async def run_analysis(filepath: str) -> dict | None:
         for name, z in result.get("explanation", [])
     ]
 
-    return {
+    response = {
         "status": result["status"],
         "deviation_score": round(result["deviation_score"], 4),
         "health_score": _compute_health_score(result["deviation_score"]),
@@ -91,4 +91,11 @@ async def run_analysis(filepath: str) -> dict | None:
         "medical_note": result.get("medical_note", ""),
         "explanation": explanation,
     }
+
+    # Include ML classifier metadata if available
+    if "ml_confidence" in result:
+        response["ml_confidence"] = round(result["ml_confidence"], 4)
+        response["ml_label"] = result["ml_label"]
+
+    return response
 
