@@ -14,8 +14,11 @@ fixed-length feature vector capturing:
     Speech rate               Speaking pace (voiced / total duration)
     Pause count               Number of silent gaps
     Avg pause duration        Mean length of pauses (seconds)
+    Jitter                    Pitch period variability (Parkinson's indicator)
+    Shimmer                   Amplitude variability (voice disorder indicator)
+    HNR                       Harmonics-to-Noise Ratio (breathiness/hoarseness)
 
-Output vector length = 13 + 2 + 2 + 2 + 2 + 1 + 1 + 1 = 24
+Output vector length = 13 + 2 + 2 + 2 + 2 + 1 + 1 + 1 + 1 + 1 + 1 = 27
 """
 
 import os
@@ -152,10 +155,55 @@ def _extract_pause_patterns(audio, sr):
     return np.array([float(pause_count), avg_pause_duration])
 
 
+def _extract_jitter(audio, sr):
+    """Jitter = pitch period variability. Key Parkinson's indicator."""
+    try:
+        f0, voiced, _ = librosa.pyin(audio, fmin=65, fmax=600, sr=sr)
+        f0_clean = f0[~np.isnan(f0)]
+        if len(f0_clean) < 2:
+            return np.array([0.0])
+        periods = 1.0 / f0_clean
+        jitter = np.mean(np.abs(np.diff(periods))) / np.mean(periods)
+        return np.array([float(jitter)])
+    except Exception:
+        return np.array([0.0])
+
+
+def _extract_shimmer(audio, sr):
+    """Shimmer = amplitude variability. Key voice disorder indicator."""
+    try:
+        rms = librosa.feature.rms(y=audio, frame_length=2048, hop_length=512)[0]
+        if len(rms) < 2:
+            return np.array([0.0])
+        shimmer = np.mean(np.abs(np.diff(rms))) / np.mean(rms)
+        return np.array([float(shimmer)])
+    except Exception:
+        return np.array([0.0])
+
+
+def _extract_hnr(audio, sr):
+    """Harmonics-to-Noise Ratio. Lower = breathier/hoarser voice."""
+    try:
+        autocorr = np.correlate(audio, audio, mode='full')
+        autocorr = autocorr[len(autocorr)//2:]
+        # Find first peak after lag 0
+        min_lag = int(sr / 600)  # max 600 Hz
+        max_lag = int(sr / 65)   # min 65 Hz
+        if max_lag >= len(autocorr):
+            return np.array([0.0])
+        peak = np.max(autocorr[min_lag:max_lag])
+        if autocorr[0] == 0:
+            return np.array([0.0])
+        hnr = 10 * np.log10(peak / (autocorr[0] - peak + 1e-10))
+        return np.array([float(hnr)])
+    except Exception:
+        return np.array([0.0])
+
+
 # --- Core extraction pipeline ---
 
 def _run_extraction(audio, sr):
-    """Extract all features from a preprocessed audio array. Returns (24,) vector."""
+    """Extract all features from a preprocessed audio array. Returns (27,) vector."""
     mfcc          = _extract_mfcc(audio, sr)
     pitch         = _extract_pitch(audio, sr)
     energy        = _extract_energy(audio)
@@ -163,9 +211,13 @@ def _run_extraction(audio, sr):
     centroid      = _extract_spectral_centroid(audio, sr)
     speech_rate   = _extract_speech_rate(audio, sr)
     pause_pattern = _extract_pause_patterns(audio, sr)
+    jitter        = _extract_jitter(audio, sr)
+    shimmer       = _extract_shimmer(audio, sr)
+    hnr           = _extract_hnr(audio, sr)
 
     return np.concatenate([mfcc, pitch, energy, zcr, centroid,
-                           speech_rate, pause_pattern])
+                           speech_rate, pause_pattern,
+                           jitter, shimmer, hnr])
 
 
 # --- Public API ---
@@ -184,7 +236,7 @@ def extract_features(filepath):
 
     Returns
     -------
-    np.ndarray of shape (24,)  or  None on failure.
+    np.ndarray of shape (27,)  or  None on failure.
     """
     # 1. Load audio
     audio, sr = safe_load_audio(filepath, sr=SAMPLE_RATE)

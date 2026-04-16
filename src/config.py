@@ -43,6 +43,9 @@ FEATURE_HEALTH_MAP = {
     "speech_rate":             "change in speaking pace (possible fatigue or breathlessness)",
     "pause_count":             "abnormal pause frequency (possible hesitation or breathlessness)",
     "avg_pause_duration":      "prolonged pauses between words (possible cognitive or respiratory change)",
+    "jitter":                  "vocal fold vibration instability (key Parkinson's / neurological indicator)",
+    "shimmer":                 "voice amplitude irregularity (possible vocal cord lesion or fatigue)",
+    "hnr":                     "change in voice clarity / breathiness (harmonics-to-noise ratio)",
 }
 # All MFCC features map to the same health explanation
 for _i in range(1, N_MFCC + 1):
@@ -57,6 +60,7 @@ FEATURE_NAMES = (
     + ["zcr_mean", "zcr_std"]
     + ["spectral_centroid_mean", "spectral_centroid_std"]
     + ["speech_rate", "pause_count", "avg_pause_duration"]
+    + ["jitter", "shimmer", "hnr"]
 )
 
 # Total feature count
